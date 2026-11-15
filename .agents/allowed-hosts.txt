@@ -7,8 +7,8 @@
 # loaded in the browser with no referrer). Added Nov 15, 2026 under the content-image rule.
 cdn.star.nesdis.noaa.gov
 
-# EUMETSAT's EUMETView map service (WMS): Meteosat GeoColour pictures, fetched with CORS so
-# the whole-Earth one can be redrawn on a canvas. Approved by Kyle Nov 15, 2026 ("Cool let's
+# EUMETSAT's EUMETView map service (WMS): Meteosat pictures. Since Nov 15, 2026 only the
+# Worker fetches from it (src/pages/live-earth/wms.ts and the hourly job in src/worker.ts). Approved by Kyle Nov 15, 2026 ("Cool let's
 # do it" to adding Meteosat). Hourly Core data only, credited per EUMETSAT's data policy.
 view.eumetsat.int
 

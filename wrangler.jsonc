@@ -4,6 +4,11 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "live-earth",
   "compatibility_date": "2026-11-01",
+  // Astro's handler plus an hourly job that keeps each new Meteosat scan in KV (src/worker.ts).
+  "main": "./src/worker.ts",
+  "triggers": { "crons": ["36 * * * *"] },
+  // Meteosat pictures, kept 14 hours by the hourly job (free plan).
+  "kv_namespaces": [{ "binding": "PICTURES", "id": "cd35e7d087824fd69cf6b73659ad37a5" }],
   "observability": { "enabled": true },
   // Claims kylepace.dev/live-earth on the hub's domain. Routes win over the hub's
   // Custom Domain, so only these paths reach this Worker.

@@ -50,19 +50,26 @@ import { formatLon } from '../../lib/sun';
         <div class="group find" role="search">
           <label class="field-label" for="place">Find a place</label>
           <div class="find-row">
-            <input
-              id="place"
-              name="place"
-              type="search"
-              list="place-list"
-              autocomplete="off"
-              spellcheck="false"
-              placeholder="Country, U.S. state or region"
-              data-find
-            />
+            <div class="find-box">
+              <input
+                id="place"
+                name="place"
+                type="text"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded="false"
+                aria-controls="place-options"
+                autocomplete="off"
+                autocapitalize="words"
+                spellcheck="false"
+                enterkeyhint="go"
+                placeholder="Country, U.S. state or region"
+                data-find
+              />
+              <ul id="place-options" class="find-options" role="listbox" aria-label="Places" hidden data-find-options></ul>
+            </div>
             <button type="submit" class="find-go">Go</button>
           </div>
-          <datalist id="place-list"></datalist>
           <p class="find-note" data-find-note aria-live="polite"></p>
         </div>
 
@@ -387,9 +394,14 @@ import { formatLon } from '../../lib/sun';
     gap: var(--space-2);
   }
 
-  .find-row input {
+  .find-box {
+    position: relative;
     flex: 1;
     min-width: 0;
+  }
+
+  .find-row input {
+    width: 100%;
     min-height: 2.75rem;
     padding: 0 var(--space-3);
     border: 1px solid #5d6c7c;
@@ -402,6 +414,41 @@ import { formatLon } from '../../lib/sun';
   .find-row input::placeholder {
     color: var(--haze);
     opacity: 1;
+  }
+
+  /* Suggestions: a list right under the box, in the console's own colors. */
+  .find-options {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 5;
+    margin: 0;
+    padding: var(--space-1) 0;
+    border: 1px solid #5d6c7c;
+    border-radius: 3px;
+    background: #121a23;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+    list-style: none;
+  }
+
+  .find-options[hidden] {
+    display: none;
+  }
+
+  .find-options li {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0 var(--space-3);
+    color: var(--starlight);
+    cursor: pointer;
+  }
+
+  .find-options li:hover,
+  .find-options li[aria-selected='true'] {
+    background: #1a2633;
+    box-shadow: inset 3px 0 0 var(--limb);
   }
 
   .find-go {

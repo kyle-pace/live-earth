@@ -43,6 +43,66 @@ export function wmsUrl(extent: Extent, width: number, height: number, when: Date
   return `${WMS}?${p}`;
 }
 
+// ---------- Through this lab's relay ----------
+//
+// EUMETView draws each picture when it's asked for, which takes 1 to 15 seconds depending on
+// size and how busy it is. So a scheduled job (src/worker.ts) asks for every size the page
+// uses, once, as soon as each hourly scan may be used, and keeps them in Workers KV
+// (Cloudflare's key-value store, free plan) for 14 hours, enough for a 12-hour time-lapse.
+// The page asks this lab's own Worker (src/pages/live-earth/wms.ts), which answers from KV,
+// or from EUMETView if it's something the job didn't keep. A side benefit: EUMETView never
+// sees visitors.
+
+export const LAYERS = [LAYER, 'msg_iodc:rgb_naturalenhncd'] as const;
+export const RELAY = '/live-earth/wms';
+
+/** The relay's address for a picture: the same request, as short query parameters. */
+export function relayUrl(extent: Extent, width: number, height: number, when: Date, layer = LAYER): string {
+  const p = new URLSearchParams({
+    layer,
+    bbox: [extent.south, extent.west, extent.north, extent.east].join(','),
+    w: String(width),
+    h: String(height),
+    time: when.toISOString().replace('.000Z', 'Z'),
+  });
+  return `${RELAY}?${p}`;
+}
+
+/** The EUMETView address a relay request stands for, or null if the relay shouldn't pass it
+ * on: an unknown layer, a strange area or size, or a scan that isn't free Core data yet
+ * (on the hour, at least 35 minutes old, and no older than a week). */
+export function upstreamFor(params: URLSearchParams, now = Date.now()): string | null {
+  const layer = params.get('layer') ?? '';
+  if (!(LAYERS as readonly string[]).includes(layer)) return null;
+  const box = (params.get('bbox') ?? '').split(',').map(Number);
+  if (box.length !== 4 || box.some((n) => !Number.isFinite(n))) return null;
+  const [south, west, north, east] = box;
+  if (south < -90 || north > 90 || south >= north || west < -180 || east > 180 || west >= east) return null;
+  const w = Number(params.get('w'));
+  const h = Number(params.get('h'));
+  if (![w, h].every((n) => Number.isInteger(n) && n >= 16 && n <= 4096)) return null;
+  const time = params.get('time') ?? '';
+  const when = Date.parse(time);
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:00:00Z$/.test(time) || Number.isNaN(when)) return null;
+  if (now - when < 35 * 60_000 || now - when > 7 * 86_400_000) return null;
+  return wmsUrl({ south, west, north, east }, w, h, new Date(when), layer);
+}
+
+/** The KV key for a relay request: one per layer, area, size and scan. */
+export function cacheKey(upstream: string): string {
+  const u = new URL(upstream).searchParams;
+  return ['wms', u.get('layers'), u.get('bbox'), `${u.get('width')}x${u.get('height')}`, u.get('time')].join('|');
+}
+
+/** The bit of Workers KV this lab uses (the full type lives in @cloudflare/workers-types). */
+export interface PictureStore {
+  get(key: string, type: 'stream'): Promise<ReadableStream | null>;
+  put(key: string, value: ReadableStream, options: { expirationTtl: number }): Promise<void>;
+}
+
+/** How long KV keeps a picture: 14 hours, enough for a 12-hour time-lapse. */
+export const KEEP_SECONDS = 14 * 3600;
+
 // ---------- The geostationary view ----------
 
 const H = 42164.16; // satellite distance from Earth's center, km

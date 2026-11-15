@@ -6,7 +6,7 @@
 // kylepace.dev's anonymous analytics.
 import { SATELLITES, type Satellite, type Size, type View } from './views';
 import { alignDown, candidates, imageUrl, lapseFrames, lapseSize, pickSize } from './goes';
-import { DISK_EXTENT, LAYER, reprojectDisk, sourceSize, wmsUrl } from './eumetsat';
+import { DISK_EXTENT, LAYER, relayUrl, reprojectDisk, sourceSize } from './eumetsat';
 import { bestView, regionPlaces, searchPlaces, viewAngle, type Place } from './nearby';
 import { FILL, parseTimes, tilePlan, tileUrl, timesUrl, zoomFor, type Box } from './cira';
 import { formatLon, lightingFor, subsolarPoint, sunElevation } from './sun';
@@ -125,11 +125,11 @@ async function loadPicture(s: Satellite, v: View, when: Date, size: Size): Promi
   if (s.source === 'noaa') return load(imageUrl(s, v, when, size));
   if (s.source === 'cira') return stitchTiles(v.box ?? [0, 0, 1, 1], v.shape === 'disk', when, size);
   const layer = s.layer ?? LAYER;
-  if (v.shape === 'rect' && v.extent) return load(wmsUrl(v.extent, size[0], size[1], when, layer));
+  if (v.shape === 'rect' && v.extent) return load(relayUrl(v.extent, size[0], size[1], when, layer));
   // A Meteosat whole Earth: fetch the flat map, then redraw it as the round planet.
   const extent = s.diskExtent ?? DISK_EXTENT;
   const [sw, sh] = sourceSize(size[0], extent);
-  const flat = await load(wmsUrl(extent, sw, sh, when, layer), true);
+  const flat = await load(relayUrl(extent, sw, sh, when, layer));
   const src = document.createElement('canvas');
   src.width = sw;
   src.height = sh;
@@ -174,12 +174,13 @@ async function ciraTimes(): Promise<Date[]> {
 /** The scan times to try, newest first. NOAA posts each GOES scan 5 to 25 minutes after it
  * starts, so the page probes. EUMETSAT's map service always answers with the nearest scan it
  * has, so probing can't tell; instead the page asks for the latest on-the-hour scan that's at
- * least 35 minutes old (EUMETSAT posts in about 25), which is also what keeps it within
- * EUMETSAT's free "Core" data. */
+ * least 45 minutes old. EUMETSAT posts in about 25; the 35-minute mark keeps it within
+ * EUMETSAT's free "Core" data, and the extra 10 give the hourly job (src/worker.ts) time to
+ * keep a copy of every size. */
 async function scanTimes(s: Satellite, v: View): Promise<Date[]> {
   if (s.source === 'noaa') return candidates(new Date(), v);
   if (s.source === 'cira') return ciraTimes().catch(() => []);
-  const first = alignDown(new Date(Date.now() - 35 * 60_000), v);
+  const first = alignDown(new Date(Date.now() - 45 * 60_000), v);
   return [first, new Date(first.getTime() - 3_600_000)];
 }
 
@@ -474,7 +475,7 @@ function afterChange() {
 // ---------- Near you, and the place search ----------
 
 const findInput = $<HTMLInputElement>('[data-find]', root);
-const findList = $<HTMLDataListElement>('#place-list', root);
+const findList = $<HTMLUListElement>('[data-find-options]', root);
 const findNote = $<HTMLElement>('[data-find-note]', root);
 
 /** Shows a place's best view: the satellite and region (src/lib/nearby.ts). Searched places
@@ -522,13 +523,61 @@ async function loadPlaces(): Promise<Place[]> {
   return places;
 }
 
+// The suggestions list follows the ARIA combobox pattern: arrow keys move through it,
+// Enter picks, Escape closes; picking goes straight to the place.
+let suggestions: Place[] = [];
+let active = -1;
+
+function closeSuggestions() {
+  findList.hidden = true;
+  findList.replaceChildren();
+  findInput.setAttribute('aria-expanded', 'false');
+  findInput.removeAttribute('aria-activedescendant');
+  suggestions = [];
+  active = -1;
+}
+
+function setActive(i: number) {
+  active = i;
+  [...findList.children].forEach((li, j) => li.setAttribute('aria-selected', String(j === i)));
+  if (i >= 0) findInput.setAttribute('aria-activedescendant', `place-option-${i}`);
+  else findInput.removeAttribute('aria-activedescendant');
+}
+
 async function suggest() {
   const list = await loadPlaces();
-  const matches = searchPlaces(list, findInput.value);
-  findList.replaceChildren(...matches.map((p) => new Option(p[0])));
+  suggestions = searchPlaces(list, findInput.value, 6);
+  active = -1;
+  if (!suggestions.length) return closeSuggestions();
+  findList.replaceChildren(
+    ...suggestions.map((p, i) => {
+      const li = document.createElement('li');
+      li.id = `place-option-${i}`;
+      li.setAttribute('role', 'option');
+      li.setAttribute('aria-selected', 'false');
+      li.textContent = p[0];
+      // Pointer down, not click, so the box keeps focus and the list doesn't close first.
+      li.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        choose(i);
+      });
+      return li;
+    }),
+  );
+  findList.hidden = false;
+  findInput.setAttribute('aria-expanded', 'true');
+}
+
+function choose(i: number) {
+  const p = suggestions[i];
+  if (!p) return;
+  findInput.value = p[0];
+  closeSuggestions();
+  findPlace();
 }
 
 async function findPlace() {
+  closeSuggestions();
   const q = findInput.value.trim();
   if (!q) return;
   const list = await loadPlaces();
@@ -705,6 +754,23 @@ async function init() {
     findPlace();
   });
   findInput.addEventListener('input', () => suggest());
+  findInput.addEventListener('keydown', (e) => {
+    const open = !findList.hidden && suggestions.length > 0;
+    if (e.key === 'ArrowDown' && open) {
+      e.preventDefault();
+      setActive((active + 1) % suggestions.length);
+    } else if (e.key === 'ArrowUp' && open) {
+      e.preventDefault();
+      setActive(active <= 0 ? suggestions.length - 1 : active - 1);
+    } else if (e.key === 'Enter' && open && active >= 0) {
+      e.preventDefault();
+      choose(active);
+    } else if (e.key === 'Escape') {
+      if (open) closeSuggestions();
+      else findInput.value = '';
+    }
+  });
+  findInput.addEventListener('blur', () => closeSuggestions());
   nightBtn.addEventListener('click', () => {
     if (!nightAlt) return;
     sat = nightAlt.sat;

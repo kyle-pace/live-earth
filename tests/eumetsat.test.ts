@@ -49,3 +49,37 @@ test('redrawing a plain map gives a round planet on black', () => {
   assert.equal(px(2, 2), 0, 'corner is space');
   assert.equal(out.data[3], 255, 'space is opaque');
 });
+
+// The relay (src/pages/live-earth/wms.ts) only passes on free, sensible requests.
+import { relayUrl, upstreamFor } from '../src/lib/eumetsat.ts';
+
+const now = Date.parse('2026-11-15T19:40:00Z');
+const params = (url: string) => new URL(url, 'https://kylepace.dev').searchParams;
+
+test('the relay maps a page request to the same EUMETView picture', () => {
+  const relay = relayUrl({ south: 34, west: -25, north: 72, east: 45 }, 600, 541, new Date('2026-11-15T19:00:00Z'));
+  const up = new URL(upstreamFor(params(relay), now)!);
+  assert.equal(up.origin + up.pathname, 'https://view.eumetsat.int/geoserver/ows');
+  assert.equal(up.searchParams.get('layers'), 'mtg_fd:rgb_geocolour');
+  assert.equal(up.searchParams.get('bbox'), '34,-25,72,45');
+  assert.equal(up.searchParams.get('width'), '600');
+  assert.equal(up.searchParams.get('time'), '2026-11-15T19:00:00Z');
+  assert.equal(up.searchParams.get('bgcolor'), '0x000000');
+});
+
+test('the relay refuses anything that isn’t a free, sensible request', () => {
+  const ok = 'layer=mtg_fd%3Argb_geocolour&bbox=34%2C-25%2C72%2C45&w=600&h=541&time=2026-11-15T19:00:00Z';
+  assert.ok(upstreamFor(new URLSearchParams(ok), now));
+  for (const [what, bad] of [
+    ['another layer', ok.replace('mtg_fd%3Argb_geocolour', 'mtg_fd%3Air_105')],
+    ['too new to be free', ok.replace('T19:00', 'T19:20').replace('19:00:00Z', '19:00:00Z')],
+    ['a scan less than 35 minutes old', ok],
+    ['not on the hour', ok.replace('T19:00:00Z', 'T18:10:00Z')],
+    ['too big', ok.replace('w=600', 'w=9000')],
+    ['a backwards box', ok.replace('34%2C-25%2C72%2C45', '72%2C-25%2C34%2C45')],
+    ['garbage', 'layer=x'],
+  ] as const) {
+    const at = what === 'a scan less than 35 minutes old' ? Date.parse('2026-11-15T19:20:00Z') : now;
+    assert.equal(upstreamFor(new URLSearchParams(bad), at), null, what);
+  }
+});

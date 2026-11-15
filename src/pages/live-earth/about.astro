@@ -37,7 +37,7 @@ const steps = [
     where: 'NOAA in Maryland, EUMETSAT in Darmstadt, and CIRA at Colorado State University',
     body: [
       'They blend each scan’s channels into a natural-color picture: true color in daylight, and on GeoColor pictures, clouds over city lights at night. NOAA publishes each GOES picture in several sizes, usually 5 to 25 minutes after the scan starts.',
-      'EUMETSAT serves its two Meteosats as flat maps, cut to any area and size on request. Live Earth uses the scan on the hour once it’s at least 35 minutes old, which keeps it within EUMETSAT’s free data.',
+      'EUMETSAT serves its two Meteosats as flat maps, cut to any area and size on request. Live Earth uses the scan on the hour once it’s at least 45 minutes old, which keeps it within EUMETSAT’s free data. EUMETSAT’s server takes a while to draw each picture, so Live Earth’s own small server on Cloudflare asks for every size once, as soon as a scan can be used, and keeps copies for 14 hours.',
       'CIRA, the lab that created GeoColor, makes Himawari pictures and serves them as square map tiles for its SLIDER viewer.',
     ],
   },
@@ -167,7 +167,7 @@ const steps = [
       <h2 id="good-title">Good to know</h2>
       <p>
         A GOES picture is usually 5 to 25 minutes old, since that’s how long NOAA takes to post a scan, and a Himawari one
-        20 to 40 minutes. The two Meteosats update once an hour and are 35 to 95 minutes old, so their time-lapses step
+        20 to 40 minutes. The two Meteosats update once an hour and are 45 to 105 minutes old, so their time-lapses step
         an hour at a time. Now and then NOAA skips a
         scan or a satellite goes into maintenance; the page shows the newest one it can find and says how old it is.
       </p>
@@ -189,10 +189,10 @@ const steps = [
       <p>
         Analytics works the same as the rest of kylepace.dev: anonymous, no cookies, and you can turn it off (<a
           href="https://kylepace.dev/privacy/">privacy</a
-        >). Live Earth records which satellite, view, time-lapse and detail level get picked. GOES and Meteosat pictures come
-        straight from NOAA’s image server (cdn.star.nesdis.noaa.gov) and EUMETSAT’s map service (view.eumetsat.int), which
-        see your request like any visit to a website; the page sends no referrer with it. Himawari pictures come through
-        Live Earth’s own server, so CIRA never sees your visit. Your detail choice is kept in your browser. Finding
+        >). Live Earth records which satellite, view, time-lapse and detail level get picked. GOES pictures come
+        straight from NOAA’s image server (cdn.star.nesdis.noaa.gov), which sees your request like any visit to a website;
+        the page sends no referrer with it. Meteosat and Himawari pictures come through Live Earth’s own server, so
+        EUMETSAT and CIRA never see your visit. Your detail choice is kept in your browser. Finding
         the view closest to you uses only your device’s time zone, inside your browser; the page never asks for your
         location and nothing about it is sent anywhere. Searches happen in your browser too, and analytics records only
         whether a search found a place, not what you typed.
