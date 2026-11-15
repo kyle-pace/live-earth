@@ -9,7 +9,7 @@ import { alignDown, candidates, imageUrl, lapseFrames, lapseSize, pickSize } fro
 import { DISK_EXTENT, LAYER, reprojectDisk, sourceSize, wmsUrl } from './eumetsat';
 import { bestView, regionPlaces, searchPlaces, viewAngle, type Place } from './nearby';
 import { FILL, parseTimes, tilePlan, tileUrl, timesUrl, zoomFor, type Box } from './cira';
-import { formatLon, lightingFor, subsolarPoint } from './sun';
+import { formatLon, lightingFor, subsolarPoint, sunElevation } from './sun';
 import { track } from './track';
 
 type Detail = 'standard' | 'high';
@@ -308,6 +308,58 @@ function renderWhat() {
   whatEl.textContent = view.label;
   $<HTMLElement>('[data-sat-name]', root).textContent = sat.name;
   creditEl.textContent = credit(sat);
+  renderNight();
+}
+
+// ---------- Night ----------
+
+const nightEl = $<HTMLElement>('[data-night]', root);
+const nightText = $<HTMLElement>('[data-night-text]', root);
+const nightBtn = $<HTMLButtonElement>('[data-night-switch]', root);
+let nightAlt: { sat: Satellite; view: View } | null = null;
+
+/** Meteosat Indian Ocean's Natural Colour picture is empty at night; the others are GeoColor,
+ * which shows city lights and clouds at night. */
+const darkAtNight = (s: Satellite) => s.source === 'eumetsat' && !!s.layer?.includes('natural');
+
+/** Says when what's on screen is at night, so a dark or blue-gray picture isn't a mystery.
+ * For a satellite that shows nothing at night, offers one that shows the place lit up. */
+function renderNight() {
+  const now = new Date();
+  let night: 'all' | 'part' | null = null;
+  let lat = 0;
+  let lon = sat.lon;
+  if (view.bounds) {
+    const [s, w, n, e] = view.bounds;
+    lat = (s + n) / 2;
+    lon = w + ((((e - w) % 360) + 360) % 360) / 2;
+    if (sunElevation(lat, lon, now) < -6) night = 'all';
+  } else if (view.shape === 'disk') {
+    const light = lightingFor(sat.lon, now);
+    night = light === 'Mostly night' ? 'all' : light === 'Day and night' ? 'part' : null;
+  }
+  nightAlt = null;
+  if (!night || (night === 'part' && !darkAtNight(sat))) {
+    nightEl.hidden = true;
+    return;
+  }
+  const where = view.shape === 'disk' ? 'this side of the planet' : view.label;
+  if (darkAtNight(sat)) {
+    nightText.textContent =
+      night === 'part'
+        ? `The black side is night. ${sat.name} shows nothing at night; the other satellites show city lights.`
+        : `It’s night over ${where} right now, and ${sat.name} shows nothing at night.`;
+    const others = SATELLITES.filter((s) => !darkAtNight(s));
+    const pick = view.shape === 'disk' ? bestView(others, 0, sat.lon) : bestView(others, lat, lon);
+    if (pick) {
+      nightAlt = { sat: pick.sat, view: view.shape === 'disk' ? pick.sat.views[0] : pick.view };
+      nightBtn.textContent = `See it lit up from ${pick.sat.name}`;
+    }
+  } else {
+    nightText.textContent = `It’s night over ${where} right now: city lights glow orange and clouds show in blue-gray.`;
+  }
+  nightBtn.hidden = !nightAlt;
+  nightEl.hidden = false;
 }
 
 function credit(s: Satellite) {
@@ -351,6 +403,7 @@ function renderLighting() {
     if (el) el.textContent = lightingFor(s.lon, now);
   }
   drawStrip(now);
+  renderNight();
 }
 
 /** The sky strip: the equator from 180° to 180°, the daylit half shaded, the sun at the
@@ -650,6 +703,14 @@ async function init() {
     findPlace();
   });
   findInput.addEventListener('input', () => suggest());
+  nightBtn.addEventListener('click', () => {
+    if (!nightAlt) return;
+    sat = nightAlt.sat;
+    view = nightAlt.view;
+    fillViews();
+    afterChange();
+    track('Changed Satellite', { satellite: sat.id, view: view.id });
+  });
   findInput.addEventListener('focus', () => loadPlaces(), { once: true });
 
   root.addEventListener('change', (e) => {

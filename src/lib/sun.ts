@@ -40,3 +40,13 @@ export function formatLon(lon: number): string {
   if (v === 0) return '0°';
   return `${v}°${lon < 0 ? 'W' : 'E'}`;
 }
+
+/** How high the sun is over a place, in degrees: 0 at sunrise and sunset, below -6 once
+ * it's properly dark. Uses the same low-precision sun position as above. */
+export function sunElevation(lat: number, lon: number, date: Date): number {
+  const sun = subsolarPoint(date);
+  const r = Math.PI / 180;
+  const cosZenith =
+    Math.sin(lat * r) * Math.sin(sun.lat * r) + Math.cos(lat * r) * Math.cos(sun.lat * r) * Math.cos((lon - sun.lon) * r);
+  return 90 - Math.acos(Math.max(-1, Math.min(1, cosZenith))) / r;
+}

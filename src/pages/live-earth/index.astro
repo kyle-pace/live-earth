@@ -34,6 +34,10 @@ import { formatLon } from '../../lib/sun';
       <div class="readout">
         <p class="what"><strong data-what>Whole Earth</strong> from <span data-sat-name>GOES</span></p>
         <p class="when" data-when></p>
+        <p class="night" data-night hidden>
+          <span data-night-text></span>
+          <button type="button" class="night-switch" data-night-switch hidden></button>
+        </p>
         <p class="credit" data-credit>Imagery: NOAA/NESDIS/STAR, GeoColor.</p>
       </div>
 
@@ -274,6 +278,40 @@ import { formatLon } from '../../lib/sun';
     margin-top: var(--space-1) !important;
     color: var(--starlight);
     font-variant-numeric: tabular-nums;
+  }
+
+  /* When what's on screen is at night: a moon-colored note, with a way to a lit-up view. */
+  .night {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-top: var(--space-2) !important;
+    padding: var(--space-2) var(--space-3);
+    border-left: 3px solid var(--haze);
+    background: #101820;
+    color: var(--starlight);
+    font-size: var(--step--1);
+  }
+
+  .night[hidden] {
+    display: none;
+  }
+
+  .night-switch {
+    min-height: 2.75rem;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--limb);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--starlight);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .night-switch:hover {
+    background: #16212c;
   }
 
   .credit {
@@ -672,7 +710,8 @@ import { formatLon } from '../../lib/sun';
       margin-top: 0 !important;
     }
 
-    .readout .credit {
+    .readout .credit,
+    .readout .night {
       flex-basis: 100%;
     }
 
