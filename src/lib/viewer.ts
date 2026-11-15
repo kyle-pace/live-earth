@@ -477,9 +477,11 @@ const findInput = $<HTMLInputElement>('[data-find]', root);
 const findList = $<HTMLDataListElement>('#place-list', root);
 const findNote = $<HTMLElement>('[data-find-note]', root);
 
-/** Shows a place's best view: the satellite and region (src/lib/nearby.ts). */
+/** Shows a place's best view: the satellite and region (src/lib/nearby.ts). Searched places
+ * are countries and states, so the region needs room around the middle (4°); if none has
+ * it, any region holding the middle will do. */
 function goTo(lat: number, lon: number): boolean {
-  const pick = bestView(SATELLITES, lat, lon);
+  const pick = bestView(SATELLITES, lat, lon, false, 4) ?? bestView(SATELLITES, lat, lon);
   if (!pick) return false;
   const changed = pick.sat !== sat || pick.view !== view;
   sat = pick.sat;
@@ -532,7 +534,7 @@ async function findPlace() {
   const list = await loadPlaces();
   const place = list.find((p) => p[0].toLowerCase() === q.toLowerCase()) ?? searchPlaces(list, q, 1)[0];
   if (!place) {
-    findNote.textContent = `No place called “${q}” in the list. Try a city, a country or a U.S. state.`;
+    findNote.textContent = `Nothing called “${q}” in the list. Try a country, a U.S. state or a region like Europe or the Caribbean.`;
     track('Searched Place', { found: false });
     return;
   }
@@ -547,7 +549,7 @@ async function findPlace() {
     fillViews();
     if (changed) afterChange();
   } else if (!goTo(place[1], place[2])) {
-    findNote.textContent = `${place[0]} is too close to a pole for any of these satellites to see.`;
+    findNote.textContent = `${place[0]} is too close to a pole for any of these satellites to see well.`;
     track('Searched Place', { found: false });
     return;
   }

@@ -45,13 +45,27 @@ test('the poles and the far side of nowhere get no picture', () => {
 
 const places: Place[] = [...regionPlaces(SATELLITES), ...JSON.parse(readFileSync(new URL('../src/data/places.json', import.meta.url), 'utf8'))];
 
-test('the search finds cities, countries, states and regions', () => {
-  assert.equal(searchPlaces(places, 'seattle')[0][0], 'Seattle, Washington');
-  assert.equal(searchPlaces(places, 'São Paulo')[0][0].split(',')[0], 'São Paulo');
-  assert.equal(searchPlaces(places, 'sao paulo')[0][0].split(',')[0], 'São Paulo');
+test('the search finds countries, states, regions, continents and oceans, and no cities', () => {
+  assert.equal(searchPlaces(places, 'côte')[0][0], 'Côte d’Ivoire');
+  assert.equal(searchPlaces(places, 'cote')[0][0], 'Côte d’Ivoire');
+  assert.ok(searchPlaces(places, 'atlantic').some((p) => p[0] === 'Atlantic Ocean'));
+  assert.deepEqual(searchPlaces(places, 'seattle'), []);
   assert.ok(searchPlaces(places, 'japan').some((p) => p[0] === 'Japan'));
   assert.ok(searchPlaces(places, 'washington').some((p) => p[0] === 'Washington, United States'));
   assert.ok(searchPlaces(places, 'gulf').some((p) => p[0] === 'Gulf of Mexico'));
   assert.deepEqual(searchPlaces(places, '   '), []);
   assert.deepEqual(searchPlaces(places, 'zzzzqx'), []);
+});
+
+test('a searched country or state lands in a region that holds it', () => {
+  const at = (name: string) => places.find((p) => p[0] === name)!;
+  const roomy = (name: string) => {
+    const [, lat, lon] = at(name);
+    const p = bestView(SATELLITES, lat, lon, false, 4) ?? bestView(SATELLITES, lat, lon);
+    return `${p!.sat.id}/${p!.view.id}`;
+  };
+  assert.equal(roomy('Texas, United States'), 'east/sp');
+  assert.equal(roomy('United States'), 'east/us');
+  assert.equal(roomy('Japan'), 'himawari/japan');
+  assert.equal(roomy('Hawaii, United States'), 'west/hi');
 });

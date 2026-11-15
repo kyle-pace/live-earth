@@ -22,10 +22,15 @@ export function viewAngle(lat: number, lon: number, satLon: number): number {
 /** Longitude difference east of `from`, in 0–360. */
 const eastOf = (lon: number, from: number) => (((lon - from) % 360) + 360) % 360;
 
-export function contains(bounds: [number, number, number, number], lat: number, lon: number): boolean {
+/** Whether a region holds a place, with `margin` degrees to spare on every side (or a
+ * quarter of the region, for small ones like Hawaii). */
+export function contains(bounds: [number, number, number, number], lat: number, lon: number, margin = 0): boolean {
   const [s, w, n, e] = bounds;
-  if (lat < s || lat > n) return false;
-  return eastOf(lon, w) <= eastOf(e, w);
+  const width = eastOf(e, w);
+  const m = Math.min(margin, (n - s) / 4, width / 4);
+  if (lat < s + m || lat > n - m) return false;
+  const x = eastOf(lon, w);
+  return x >= m && x <= width - m;
 }
 
 function area(bounds: [number, number, number, number]): number {
@@ -40,10 +45,14 @@ export interface Pick {
   angle: number;
 }
 
-/** The best picture of a place, or null if no satellite sees it (the poles). `wide` picks the
- * largest region around the place instead of the smallest: right when the place is only a
- * guess, like a time zone's main city (Los Angeles for everyone on Pacific time). */
-export function bestView(sats: Satellite[], lat: number, lon: number, wide = false): Pick | null {
+/** The best picture of a place, or null if no satellite sees it (the poles).
+ *
+ * `wide` picks the largest region around the place instead of the smallest: right when the
+ * place is only a guess, like a time zone's main city (Los Angeles for everyone on Pacific
+ * time). `margin` (degrees) skips regions where the place sits near an edge, so a whole
+ * country or state lands in a region that holds it, not one that clips it: Texas gets the
+ * Southern Plains, not the Southern Mississippi Valley, whose west edge runs through it. */
+export function bestView(sats: Satellite[], lat: number, lon: number, wide = false, margin = 0): Pick | null {
   const ranked = sats
     .map((sat) => ({ sat, angle: viewAngle(lat, lon, sat.lon) }))
     .filter((x) => x.angle <= MAX_ANGLE)
@@ -53,7 +62,7 @@ export function bestView(sats: Satellite[], lat: number, lon: number, wide = fal
   // The best-placed satellite with a region around the place; its smallest such region.
   for (const { sat, angle } of ranked) {
     const regions = sat.views
-      .filter((v) => v.bounds && contains(v.bounds, lat, lon))
+      .filter((v) => v.bounds && contains(v.bounds, lat, lon, margin))
       .sort((a, b) => (wide ? -1 : 1) * (area(a.bounds!) - area(b.bounds!)));
     if (regions.length) return { sat, view: regions[0], angle };
   }

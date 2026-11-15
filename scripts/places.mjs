@@ -2,7 +2,10 @@
 // a first-time visitor. Run with `npm run places`; the output is committed, so this only
 // needs rerunning to change the list.
 //
-//   src/data/places.json     ~2,500 cities, every country and U.S. state: [name, lat, lon, rank]
+//   src/data/places.json     every country and U.S. state, plus continents and oceans: [name, lat, lon, rank]
+//
+// No cities: the satellites' regions are hundreds of miles across, so a city would only
+// promise more detail than the picture has.
 //   src/data/timezones.json  each IANA time zone's main city: { "America/Los_Angeles": [lat, lon] }
 //
 // Cities come from GeoNames via the all-the-cities package (CC BY 4.0; credited on the About
@@ -67,17 +70,15 @@ for (const [code, list] of byState) {
   places.push([`${STATES[code]}, United States`, ...middle(list), list.reduce((n, c) => n + c.population, 0)]);
 }
 
-const seen = new Set();
-for (const c of cities) {
-  const keep = c.population >= 250000 || c.featureCode === 'PPLC' || (c.featureCode === 'PPLA' && c.population >= 75000);
-  if (!keep) continue;
-  let where = '';
-  try { where = country.of(c.country); } catch {}
-  const label = c.country === 'US' && STATES[c.adminCode] ? `${c.name}, ${STATES[c.adminCode]}` : `${c.name}, ${where || c.country}`;
-  if (seen.has(label)) continue;
-  seen.add(label);
-  const [lon, lat] = c.loc.coordinates;
-  places.push([label, round(lat), round(lon), c.population]);
+// Continents and oceans, by hand: a point near the middle of each that a satellite sees well.
+const BIG = 1e11;
+for (const [name, lat, lon] of [
+  ['North America', 45, -100], ['South America', -15, -60], ['Asia', 35, 100], ['Australia and Oceania', -25, 140],
+  ['Pacific Ocean', 0, -160], ['Atlantic Ocean', 15, -40], ['Indian Ocean', -15, 75], ['Arctic', 75, 0],
+  ['Antarctica', -80, 0], ['Mediterranean Sea', 36, 18], ['Caribbean Sea', 15, -75], ['Sahara', 23, 10],
+  ['Himalayas', 29, 84], ['Amazon', -4, -62], ['Great Plains', 40, -100],
+]) {
+  places.push([name, lat, lon, BIG]);
 }
 
 places.sort((a, b) => b[3] - a[3]);
