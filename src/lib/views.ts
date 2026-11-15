@@ -34,6 +34,11 @@ export interface View {
   sizes: Size[];
   /** Meteosat regions only: the part of the flat map to show. */
   extent?: Extent;
+  /** Roughly where a region is, as [south, west, north, east] in degrees (west greater than
+   * east means it crosses the date line). Used to pick the best view of a place
+   * (src/lib/nearby.ts); hand-set from each region's pictures, so only good to a degree or
+   * two. The whole Earth and NOAA's "All 50 states" have none. */
+  bounds?: [number, number, number, number];
   /** Himawari only: the part of CIRA's full-disk picture to show, as fractions of its width
    * and height (the whole disk is [0, 0, 1, 1]). Regions were worked out from latitude and
    * longitude boxes with the geostationary formulas. */
@@ -140,6 +145,12 @@ export const SATELLITES: Satellite[] = [
             0.0227,
             0.071
           ]
+        ],
+        "bounds": [
+          24,
+          -125,
+          50,
+          -66
         ]
       },
       {
@@ -181,6 +192,12 @@ export const SATELLITES: Satellite[] = [
             0.0289,
             0.076
           ]
+        ],
+        "bounds": [
+          42,
+          -120,
+          62,
+          -55
         ]
       },
       {
@@ -222,6 +239,12 @@ export const SATELLITES: Satellite[] = [
             0.1,
             0
           ]
+        ],
+        "bounds": [
+          10,
+          -88,
+          27,
+          -58
         ]
       },
       {
@@ -263,6 +286,12 @@ export const SATELLITES: Satellite[] = [
             0.1,
             0
           ]
+        ],
+        "bounds": [
+          5,
+          -95,
+          22,
+          -75
         ]
       },
       {
@@ -298,6 +327,12 @@ export const SATELLITES: Satellite[] = [
             0.0299,
             0.0566
           ]
+        ],
+        "bounds": [
+          0,
+          -140,
+          35,
+          -100
         ]
       },
       {
@@ -333,6 +368,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          38,
+          -95,
+          50,
+          -72
         ]
       },
       {
@@ -374,6 +415,12 @@ export const SATELLITES: Satellite[] = [
             0.1,
             0
           ]
+        ],
+        "bounds": [
+          18,
+          -98,
+          31,
+          -80
         ]
       },
       {
@@ -415,6 +462,12 @@ export const SATELLITES: Satellite[] = [
             0.1,
             0
           ]
+        ],
+        "bounds": [
+          14,
+          -118,
+          33,
+          -86
         ]
       },
       {
@@ -450,6 +503,12 @@ export const SATELLITES: Satellite[] = [
             0.0299,
             0.0566
           ]
+        ],
+        "bounds": [
+          30,
+          -70,
+          65,
+          -10
         ]
       },
       {
@@ -485,6 +544,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          37,
+          -82,
+          48,
+          -66
         ]
       },
       {
@@ -520,6 +585,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          40,
+          -118,
+          50,
+          -100
         ]
       },
       {
@@ -555,6 +626,12 @@ export const SATELLITES: Satellite[] = [
             0.0299,
             0.0566
           ]
+        ],
+        "bounds": [
+          -15,
+          -82,
+          13,
+          -34
         ]
       },
       {
@@ -590,6 +667,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          41,
+          -126,
+          50,
+          -110
         ]
       },
       {
@@ -625,6 +708,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          31,
+          -125,
+          42,
+          -112
         ]
       },
       {
@@ -660,6 +749,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          16,
+          -70,
+          20,
+          -63
         ]
       },
       {
@@ -695,6 +790,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          24,
+          -92,
+          37,
+          -75
         ]
       },
       {
@@ -730,6 +831,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          29,
+          -98,
+          37,
+          -85
         ]
       },
       {
@@ -765,6 +872,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          26,
+          -108,
+          40,
+          -93
         ]
       },
       {
@@ -800,6 +913,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          31,
+          -115,
+          42,
+          -101
         ]
       },
       {
@@ -835,6 +954,12 @@ export const SATELLITES: Satellite[] = [
             0.0299,
             0.0566
           ]
+        ],
+        "bounds": [
+          -56,
+          -82,
+          -15,
+          -34
         ]
       },
       {
@@ -870,6 +995,12 @@ export const SATELLITES: Satellite[] = [
             0.0299,
             0.0566
           ]
+        ],
+        "bounds": [
+          5,
+          -60,
+          30,
+          -15
         ]
       },
       {
@@ -911,6 +1042,12 @@ export const SATELLITES: Satellite[] = [
             0.1,
             0
           ]
+        ],
+        "bounds": [
+          25,
+          -85,
+          45,
+          -60
         ]
       },
       {
@@ -946,6 +1083,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          37,
+          -100,
+          49,
+          -85
         ]
       }
     ],
@@ -1032,6 +1175,12 @@ export const SATELLITES: Satellite[] = [
             0.0227,
             0.071
           ]
+        ],
+        "bounds": [
+          15,
+          -175,
+          55,
+          -100
         ]
       },
       {
@@ -1073,6 +1222,12 @@ export const SATELLITES: Satellite[] = [
             0.1,
             0
           ]
+        ],
+        "bounds": [
+          51,
+          -170,
+          72,
+          -130
         ]
       },
       {
@@ -1143,6 +1298,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          58,
+          -160,
+          70,
+          -140
         ]
       },
       {
@@ -1178,6 +1339,12 @@ export const SATELLITES: Satellite[] = [
             0.0299,
             0.0566
           ]
+        ],
+        "bounds": [
+          0,
+          -140,
+          35,
+          -100
         ]
       },
       {
@@ -1213,6 +1380,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          18,
+          -161,
+          23,
+          -154
         ]
       },
       {
@@ -1248,6 +1421,12 @@ export const SATELLITES: Satellite[] = [
             0.0299,
             0.0566
           ]
+        ],
+        "bounds": [
+          30,
+          160,
+          62,
+          -140
         ]
       },
       {
@@ -1283,6 +1462,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          41,
+          -126,
+          50,
+          -110
         ]
       },
       {
@@ -1318,6 +1503,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          31,
+          -125,
+          42,
+          -112
         ]
       },
       {
@@ -1353,6 +1544,12 @@ export const SATELLITES: Satellite[] = [
             0.0299,
             0.0566
           ]
+        ],
+        "bounds": [
+          -30,
+          -170,
+          0,
+          -120
         ]
       },
       {
@@ -1388,6 +1585,12 @@ export const SATELLITES: Satellite[] = [
             0.0852,
             0
           ]
+        ],
+        "bounds": [
+          54,
+          -140,
+          60,
+          -130
         ]
       },
       {
@@ -1423,6 +1626,12 @@ export const SATELLITES: Satellite[] = [
             0.0299,
             0.0566
           ]
+        ],
+        "bounds": [
+          0,
+          -170,
+          25,
+          -130
         ]
       },
       {
@@ -1464,6 +1673,12 @@ export const SATELLITES: Satellite[] = [
             0.1,
             0
           ]
+        ],
+        "bounds": [
+          32,
+          -126,
+          49,
+          -114
         ]
       }
     ],
@@ -1545,6 +1760,12 @@ export const SATELLITES: Satellite[] = [
             0,
             0
           ]
+        ],
+        "bounds": [
+          -36,
+          -20,
+          38,
+          55
         ]
       },
       {
@@ -1580,6 +1801,12 @@ export const SATELLITES: Satellite[] = [
             0,
             0
           ]
+        ],
+        "bounds": [
+          34,
+          -25,
+          72,
+          45
         ]
       }
     ]
@@ -1668,6 +1895,12 @@ export const SATELLITES: Satellite[] = [
             0,
             0
           ]
+        ],
+        "bounds": [
+          5,
+          66,
+          36,
+          93
         ]
       },
       {
@@ -1703,6 +1936,12 @@ export const SATELLITES: Satellite[] = [
             0,
             0
           ]
+        ],
+        "bounds": [
+          12,
+          30,
+          42,
+          63
         ]
       }
     ]
@@ -1789,6 +2028,12 @@ export const SATELLITES: Satellite[] = [
             0,
             0
           ]
+        ],
+        "bounds": [
+          30,
+          124,
+          46,
+          146
         ]
       },
       {
@@ -1830,6 +2075,12 @@ export const SATELLITES: Satellite[] = [
             0,
             0
           ]
+        ],
+        "bounds": [
+          18,
+          100,
+          50,
+          150
         ]
       },
       {
@@ -1871,6 +2122,12 @@ export const SATELLITES: Satellite[] = [
             0,
             0
           ]
+        ],
+        "bounds": [
+          -11,
+          95,
+          22,
+          130
         ]
       },
       {
@@ -1912,6 +2169,12 @@ export const SATELLITES: Satellite[] = [
             0,
             0
           ]
+        ],
+        "bounds": [
+          -45,
+          110,
+          -9,
+          156
         ]
       },
       {
@@ -1959,6 +2222,12 @@ export const SATELLITES: Satellite[] = [
             0,
             0
           ]
+        ],
+        "bounds": [
+          0,
+          120,
+          35,
+          170
         ]
       }
     ]

@@ -7,6 +7,7 @@
 import { SATELLITES, type Satellite, type Size, type View } from './views';
 import { alignDown, candidates, imageUrl, lapseFrames, lapseSize, pickSize } from './goes';
 import { DISK_EXTENT, LAYER, reprojectDisk, sourceSize, wmsUrl } from './eumetsat';
+import { bestView, regionPlaces, searchPlaces, viewAngle, type Place } from './nearby';
 import { FILL, parseTimes, tilePlan, tileUrl, timesUrl, zoomFor, type Box } from './cira';
 import { formatLon, lightingFor, subsolarPoint } from './sun';
 import { track } from './track';
@@ -42,6 +43,9 @@ const storedDetail = safeGet('live-earth:detail');
 
 let sat: Satellite = SATELLITES.find((s) => s.id === params.get('sat')) ?? sunniest();
 let view: View = sat.views.find((v) => v.id === params.get('view')) ?? sat.views[0];
+// With no satellite in the address, the page opens on the best view near the visitor (see
+// openNearby), worked out from their time zone.
+const fromAddress = params.has('sat');
 let detail: Detail = params.get('detail') === 'high' || storedDetail === 'high' ? 'high' : 'standard';
 let mode: Mode = 'live';
 let latest: Date | null = null; // newest scan found for the current view
@@ -414,6 +418,92 @@ function afterChange() {
   showLatest('change');
 }
 
+// ---------- Near you, and the place search ----------
+
+const findInput = $<HTMLInputElement>('[data-find]', root);
+const findList = $<HTMLDataListElement>('#place-list', root);
+const findNote = $<HTMLElement>('[data-find-note]', root);
+
+/** Shows a place's best view: the satellite and region (src/lib/nearby.ts). */
+function goTo(lat: number, lon: number): boolean {
+  const pick = bestView(SATELLITES, lat, lon);
+  if (!pick) return false;
+  const changed = pick.sat !== sat || pick.view !== view;
+  sat = pick.sat;
+  view = pick.view;
+  fillViews();
+  if (changed) afterChange();
+  else syncRadios();
+  return true;
+}
+
+/** First visit: the time zone the browser already reports (America/Los_Angeles) has a main
+ * city with a known location, close enough to pick a region. No location request, and
+ * nothing leaves the browser. */
+async function openNearby(): Promise<boolean> {
+  try {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const zones = (await import('../data/timezones.json')).default as Record<string, [number, number]>;
+    const at = zones[zone];
+    if (!at) return false;
+    const pick = bestView(SATELLITES, at[0], at[1], true);
+    if (!pick) return false;
+    sat = pick.sat;
+    view = pick.view;
+    findNote.textContent = `Showing the closest view to your time zone. Search for anywhere else.`;
+    track('Opened Nearby View', { satellite: sat.id, view: view.id });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+let places: Place[] | null = null;
+async function loadPlaces(): Promise<Place[]> {
+  if (!places) {
+    const list = (await import('../data/places.json')).default as Place[];
+    places = [...regionPlaces(SATELLITES), ...list];
+  }
+  return places;
+}
+
+async function suggest() {
+  const list = await loadPlaces();
+  const matches = searchPlaces(list, findInput.value);
+  findList.replaceChildren(...matches.map((p) => new Option(p[0])));
+}
+
+async function findPlace() {
+  const q = findInput.value.trim();
+  if (!q) return;
+  const list = await loadPlaces();
+  const place = list.find((p) => p[0].toLowerCase() === q.toLowerCase()) ?? searchPlaces(list, q, 1)[0];
+  if (!place) {
+    findNote.textContent = `No place called “${q}” in the list. Try a city, a country or a U.S. state.`;
+    track('Searched Place', { found: false });
+    return;
+  }
+  // A region's own name ("Gulf of Mexico") goes straight to that region, from whichever
+  // satellite sees it best.
+  const region = SATELLITES.flatMap((s) => s.views.filter((v) => v.label === place[0]).map((v) => ({ s, v })))
+    .sort((a, b) => viewAngle(place[1], place[2], a.s.lon) - viewAngle(place[1], place[2], b.s.lon))[0];
+  if (region) {
+    const changed = region.s !== sat || region.v !== view;
+    sat = region.s;
+    view = region.v;
+    fillViews();
+    if (changed) afterChange();
+  } else if (!goTo(place[1], place[2])) {
+    findNote.textContent = `${place[0]} is too close to a pole for any of these satellites to see.`;
+    track('Searched Place', { found: false });
+    return;
+  }
+  findNote.textContent = region
+    ? `${view.label} from ${sat.name}.`
+    : `${place[0]}: ${view.label} from ${sat.name}, the closest view.`;
+  track('Searched Place', { found: true, satellite: sat.id, view: view.id });
+}
+
 // ---------- Time-lapse ----------
 
 async function startLapse(hours: number) {
@@ -543,7 +633,8 @@ function wake() {
 
 // ---------- Wiring ----------
 
-function init() {
+async function init() {
+  if (!fromAddress) await openNearby();
   setFrameShape(view);
   fillViews();
   renderWhat();
@@ -552,7 +643,14 @@ function init() {
   saveUrl();
   showLatest('start');
 
-  $<HTMLFormElement>('.console', root).addEventListener('submit', (e) => e.preventDefault());
+  // The console is one form; the only thing that submits it is the place search (Enter in
+  // the search box, or its Go button).
+  $<HTMLFormElement>('.console', root).addEventListener('submit', (e) => {
+    e.preventDefault();
+    findPlace();
+  });
+  findInput.addEventListener('input', () => suggest());
+  findInput.addEventListener('focus', () => loadPlaces(), { once: true });
 
   root.addEventListener('change', (e) => {
     const t = e.target as HTMLInputElement | HTMLSelectElement;

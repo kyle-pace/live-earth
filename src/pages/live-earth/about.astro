@@ -88,7 +88,9 @@ const steps = [
     <section aria-labelledby="use-title">
       <h2 id="use-title">How to use it</h2>
       <p>
-        Pick a satellite, then a view. The strip above the satellite buttons is the equator: each satellite sits at its real
+        The page opens on the closest view to you, worked out from your device’s time zone. Type any city, country,
+        U.S. state or region into Find a place and it picks the satellite that sees it most nearly straight down and
+        the smallest view around it. Or pick a satellite, then a view. The strip above the satellite buttons is the equator: each satellite sits at its real
         longitude, and the shaded half is the side of the planet in daylight right now, with the sun where it’s noon. The
         satellite closest to the sun is chosen for you when the page opens.
       </p>
@@ -153,6 +155,10 @@ const steps = [
         Himawari pictures are GeoColor imagery from <a href="https://slider.cira.colostate.edu/">CIRA/RAMMB SLIDER</a> at
         Colorado State University, made from Himawari-9 data from the Japan Meteorological Agency.
       </p>
+      <p>
+        Place names and locations for the search come from <a href="https://www.geonames.org/">GeoNames</a> (CC BY
+        4.0), and time zone locations from the IANA time zone database.
+      </p>
       <p>Live Earth isn’t made or endorsed by NOAA, EUMETSAT, CIRA or JMA.</p>
     </section>
 
@@ -185,7 +191,10 @@ const steps = [
         >). Live Earth records which satellite, view, time-lapse and detail level get picked. GOES and Meteosat pictures come
         straight from NOAA’s image server (cdn.star.nesdis.noaa.gov) and EUMETSAT’s map service (view.eumetsat.int), which
         see your request like any visit to a website; the page sends no referrer with it. Himawari pictures come through
-        Live Earth’s own server, so CIRA never sees your visit. Your detail choice is kept in your browser.
+        Live Earth’s own server, so CIRA never sees your visit. Your detail choice is kept in your browser. Finding
+        the view closest to you uses only your device’s time zone, inside your browser; the page never asks for your
+        location and nothing about it is sent anywhere. Searches happen in your browser too, and analytics records only
+        whether a search found a place, not what you typed.
       </p>
     </section>
 

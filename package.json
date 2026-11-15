@@ -11,7 +11,8 @@
     "astro": "astro",
     "check": "node .agents/skills/page-check/check.mjs",
     "og": "node scripts/og.mjs",
-    "test": "node --experimental-strip-types --no-warnings --test tests/*.test.ts"
+    "test": "node --experimental-strip-types --no-warnings --test tests/*.test.ts",
+    "places": "node scripts/places.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.6",
@@ -19,7 +20,9 @@
     "kp-design": "github:kyle-pace/kp-design#2ebaf37266d6576d4ded754d1c303932d1749d89"
   },
   "devDependencies": {
+    "all-the-cities": "^3.1.0",
     "axe-core": "^4.14.0",
+    "moment-timezone": "^0.6.6",
     "playwright": "^1.65.1",
     "wrangler": "^4.158.0"
   }
