@@ -1,10 +1,12 @@
 // The Live Earth viewer: finds the newest picture for the chosen satellite and view, shows
 // it as big as the screen allows, checks for a newer one every minute, and plays recent
-// hours back as a time-lapse. Pictures load straight from NOAA's image server into <img>
-// elements; nothing else is fetched and nothing leaves the browser except kylepace.dev's
-// anonymous analytics.
+// hours back as a time-lapse. GOES pictures load straight from NOAA's image server; Meteosat
+// pictures come from EUMETSAT's map service, and the whole-Earth one is redrawn as a round
+// planet on a canvas here (src/lib/eumetsat.ts). Nothing leaves the browser except
+// kylepace.dev's anonymous analytics.
 import { SATELLITES, type Satellite, type Size, type View } from './views';
-import { candidates, imageUrl, lapseFrames, lapseSize, pickSize } from './goes';
+import { alignDown, candidates, imageUrl, lapseFrames, lapseSize, pickSize } from './goes';
+import { DISK_EXTENT, reprojectDisk, sourceSize, wmsUrl } from './eumetsat';
 import { formatLon, lightingFor, subsolarPoint } from './sun';
 import { track } from './track';
 
@@ -81,10 +83,12 @@ function saveUrl() {
 
 // ---------- Loading pictures ----------
 
-function load(url: string): Promise<HTMLImageElement> {
+function load(url: string, cors = false): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const el = new Image();
     el.referrerPolicy = 'no-referrer';
+    // The canvas can only read a picture from another site if it was asked for with CORS.
+    if (cors) el.crossOrigin = 'anonymous';
     el.decoding = 'async';
     el.onload = () => resolve(el);
     el.onerror = () => reject(new Error(`Not available: ${url}`));
@@ -92,15 +96,64 @@ function load(url: string): Promise<HTMLImageElement> {
   });
 }
 
+// Pictures drawn on a canvas are handed to <img> as blob: addresses, which hold memory until
+// they're released. Each one is released once nothing on screen uses it.
+const blobs = new Set<string>();
+
+function release(url: string | null | undefined) {
+  if (url && blobs.has(url)) {
+    URL.revokeObjectURL(url);
+    blobs.delete(url);
+  }
+}
+
+async function toImage(canvas: HTMLCanvasElement): Promise<HTMLImageElement> {
+  const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.9));
+  if (!blob) throw new Error('Could not draw the picture.');
+  const url = URL.createObjectURL(blob);
+  blobs.add(url);
+  return load(url);
+}
+
+/** One picture of a view at a size, from whichever service has it. */
+async function loadPicture(s: Satellite, v: View, when: Date, size: Size): Promise<HTMLImageElement> {
+  if (s.source === 'noaa') return load(imageUrl(s, v, when, size));
+  if (v.shape === 'rect' && v.extent) return load(wmsUrl(v.extent, size[0], size[1], when));
+  // Meteosat's whole Earth: fetch the flat map, then redraw it as the round planet.
+  const [sw, sh] = sourceSize(size[0]);
+  const flat = await load(wmsUrl(DISK_EXTENT, sw, sh, when), true);
+  const src = document.createElement('canvas');
+  src.width = sw;
+  src.height = sh;
+  const sctx = src.getContext('2d', { willReadFrequently: true })!;
+  sctx.drawImage(flat, 0, 0, sw, sh);
+  const round = reprojectDisk(sctx.getImageData(0, 0, sw, sh), size[0]);
+  const out = document.createElement('canvas');
+  out.width = out.height = size[0];
+  out.getContext('2d')!.putImageData(new ImageData(round.data, size[0], size[0]), 0, 0);
+  return toImage(out);
+}
+
+/** The scan times to try, newest first. NOAA posts each GOES scan 5 to 25 minutes after it
+ * starts, so the page probes. EUMETSAT's map service always answers with the nearest scan it
+ * has, so probing can't tell; instead the page asks for the latest on-the-hour scan that's at
+ * least 35 minutes old (EUMETSAT posts in about 25), which is also what keeps it within
+ * EUMETSAT's free "Core" data. */
+function scanTimes(s: Satellite, v: View): Date[] {
+  if (s.source === 'noaa') return candidates(new Date(), v);
+  const first = alignDown(new Date(Date.now() - 35 * 60_000), v);
+  return [first, new Date(first.getTime() - 3_600_000)];
+}
+
 /** Tries scan times newest first with the smallest picture, which is quick to fetch and
  * doubles as a placeholder while the full-size one loads. */
 async function findLatest(s: Satellite, v: View): Promise<{ when: Date; preview: HTMLImageElement } | null> {
-  for (const when of candidates(new Date(), v)) {
+  for (const when of scanTimes(s, v)) {
     try {
-      const preview = await load(imageUrl(s, v, when, v.sizes[0]));
+      const preview = await loadPicture(s, v, when, v.sizes[0]);
       return { when, preview };
     } catch {
-      /* Not posted yet, or skipped by NOAA: try the scan before. */
+      /* Not posted yet, or skipped: try the scan before. */
     }
   }
   return null;
@@ -128,7 +181,9 @@ function setFrameShape(v: View, size: Size = v.sizes[0]) {
 }
 
 function show(el: HTMLImageElement, when: Date) {
+  const old = img.src;
   img.src = el.src;
+  if (old !== el.src && !lapse?.frames.some((f) => f.img.src === old)) release(old);
   shown = when;
   img.alt = altText(when);
   renderWhen();
@@ -147,7 +202,10 @@ async function showLatest(reason: 'start' | 'change' | 'refresh') {
     setStatus('NOAA’s image server isn’t answering right now. This page tries again every minute.');
     return;
   }
-  if (reason === 'refresh' && latest && found.when.getTime() <= latest.getTime()) return;
+  if (reason === 'refresh' && latest && found.when.getTime() <= latest.getTime()) {
+    release(found.preview.src);
+    return;
+  }
   latest = found.when;
   // The frame takes the full-size picture's shape. The small copy shows blurred in the
   // meantime (is-loading), so any of NOAA's overlay it has stays unreadable.
@@ -158,10 +216,11 @@ async function showLatest(reason: 'start' | 'change' | 'refresh') {
   }
   setStatus(reason === 'refresh' ? '' : 'Loading the full-size picture…');
   try {
-    const full = await load(imageUrl(sat, view, found.when, size));
-    if (token !== loadToken) return;
+    const full = await loadPicture(sat, view, found.when, size);
+    if (token !== loadToken) return release(full.src);
     setFrameShape(view, size);
     show(full, found.when);
+    release(found.preview.src);
     setStatus('');
   } catch {
     if (token !== loadToken) return;
@@ -210,7 +269,10 @@ function renderWhen() {
 function renderWhat() {
   whatEl.textContent = view.label;
   $<HTMLElement>('[data-sat-name]', root).textContent = sat.name;
-  creditEl.textContent = `Imagery: NOAA/NESDIS/STAR, ${sat.craft} GeoColor.`;
+  creditEl.textContent =
+    sat.source === 'noaa'
+      ? `Imagery: NOAA/NESDIS/STAR, ${sat.craft} GeoColor.`
+      : `Imagery: contains modified EUMETSAT Meteosat data ${new Date().getUTCFullYear()}, ${sat.craft} GeoColour.`;
 }
 
 function altText(when: Date) {
@@ -336,7 +398,7 @@ async function startLapse(hours: number) {
   const results = await Promise.all(
     times.map(async (when) => {
       try {
-        const el = await load(imageUrl(sat, view, when, size));
+        const el = await loadPicture(sat, view, when, size);
         return { when, img: el };
       } catch {
         return null; // NOAA skips a scan now and then; the loop just goes without it.
@@ -414,6 +476,7 @@ function setPlaying(on: boolean) {
 
 function stopLapse() {
   pause();
+  for (const f of lapse?.frames ?? []) if (f.img.src !== img.src) release(f.img.src);
   lapse = null;
   lapseRow.hidden = true;
 }

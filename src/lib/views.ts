@@ -14,6 +14,12 @@
 // start of the scan in UTC. New scans start every `cadence` minutes, at minutes ending in
 // `offset` (0, 10, 20... or 1, 6, 11...).
 
+// Meteosat (source 'eumetsat') works differently: its pictures come from EUMETSAT's map
+// service as flat maps of an `extent`, at any size, every hour; see src/lib/eumetsat.ts. Its
+// sizes have no trims, since EUMETSAT adds no logo or caption.
+
+import type { Extent } from './eumetsat';
+
 export interface View {
   id: string;
   code: string;
@@ -23,17 +29,20 @@ export interface View {
   cadence: number;
   offset: number;
   sizes: Size[];
+  /** Meteosat regions only: the part of the flat map to show. */
+  extent?: Extent;
 }
 
 /** [width, height, trim bottom, trim left] */
 export type Size = [number, number, number, number];
 
 export interface Satellite {
-  id: 'east' | 'west';
+  id: 'east' | 'west' | 'meteosat';
   code: string;
   name: string;
   craft: string;
   lon: number;
+  source: 'noaa' | 'eumetsat';
   views: View[];
 }
 
@@ -927,7 +936,8 @@ export const SATELLITES: Satellite[] = [
           ]
         ]
       }
-    ]
+    ],
+    "source": "noaa"
   },
   {
     "id": "west",
@@ -1440,6 +1450,122 @@ export const SATELLITES: Satellite[] = [
             4000,
             4000,
             0.1,
+            0
+          ]
+        ]
+      }
+    ],
+    "source": "noaa"
+  },
+  {
+    "id": "meteosat",
+    "code": "MTG",
+    "name": "Meteosat",
+    "craft": "Meteosat-12",
+    "lon": 0,
+    "source": "eumetsat",
+    "views": [
+      {
+        "id": "earth",
+        "code": "FD",
+        "label": "Whole Earth",
+        "group": "whole",
+        "shape": "disk",
+        "cadence": 60,
+        "offset": 0,
+        "sizes": [
+          [
+            678,
+            678,
+            0,
+            0
+          ],
+          [
+            1200,
+            1200,
+            0,
+            0
+          ],
+          [
+            1808,
+            1808,
+            0,
+            0
+          ],
+          [
+            2700,
+            2700,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "africa",
+        "code": "africa",
+        "label": "Africa",
+        "group": "region",
+        "shape": "rect",
+        "cadence": 60,
+        "offset": 0,
+        "extent": {
+          "south": -36,
+          "west": -20,
+          "north": 38,
+          "east": 55
+        },
+        "sizes": [
+          [
+            600,
+            592,
+            0,
+            0
+          ],
+          [
+            1200,
+            1184,
+            0,
+            0
+          ],
+          [
+            2400,
+            2368,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "europe",
+        "code": "europe",
+        "label": "Europe",
+        "group": "region",
+        "shape": "rect",
+        "cadence": 60,
+        "offset": 0,
+        "extent": {
+          "south": 34,
+          "west": -25,
+          "north": 72,
+          "east": 45
+        },
+        "sizes": [
+          [
+            600,
+            541,
+            0,
+            0
+          ],
+          [
+            1200,
+            1082,
+            0,
+            0
+          ],
+          [
+            2400,
+            2165,
+            0,
             0
           ]
         ]

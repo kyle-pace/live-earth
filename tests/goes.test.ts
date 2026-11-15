@@ -88,7 +88,8 @@ test('the sun is over the right side of the planet', () => {
 });
 
 test('every trim leaves most of the picture and hides at least the caption bar', () => {
-  for (const sat of SATELLITES) {
+  // Only NOAA stamps a caption; Meteosat pictures come clean.
+  for (const sat of SATELLITES.filter((s) => s.source === 'noaa')) {
     for (const view of sat.views) {
       for (const [w, h, bottom, left] of view.sizes) {
         if (view.shape === 'disk') continue;

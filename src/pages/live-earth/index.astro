@@ -61,7 +61,7 @@ import { formatLon } from '../../lib/sun';
               ))
             }
           </svg>
-          <div class="tabs">
+          <div class="tabs tabs-3 sat-tabs">
             {
               SATELLITES.slice()
                 .sort((a, b) => a.lon - b.lon)
@@ -69,9 +69,8 @@ import { formatLon } from '../../lib/sun';
                   <label class="tab">
                     <input type="radio" name="sat" value={s.id} />
                     <span class="tab-name">{s.name}</span>
-                    <span class="tab-sub">
-                      {formatLon(s.lon)}, <span data-light={s.id}>…</span>
-                    </span>
+                    <span class="tab-sub">{formatLon(s.lon)}</span>
+                    <span class="tab-sub" data-light={s.id}>…</span>
                   </label>
                 ))
             }
@@ -320,6 +319,12 @@ import { formatLon } from '../../lib/sun';
 
   .tabs-3 {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Three satellites share one row, so their names and details can wrap to different
+     heights; line them up from the top. */
+  .sat-tabs .tab {
+    align-content: start;
   }
 
   .tab {

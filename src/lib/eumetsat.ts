@@ -1,0 +1,131 @@
+// Meteosat pictures from EUMETSAT's public map service (EUMETView). It serves Meteosat-12's
+// GeoColour picture as a flat latitude/longitude map; for the whole-Earth view the browser
+// turns that map back into the round planet as Meteosat sees it from 0° longitude. Regions
+// are shown as the flat map itself.
+//
+// Licence: EUMETSAT's data policy (Jan 2026) makes Meteosat image products, hourly scans and
+// anything an hour or older "Core" data: free and unrestricted under CC BY 4.0, with the
+// credit "Contains modified EUMETSAT Meteosat data <year>". The viewer only asks for
+// on-the-hour scans, so every picture it shows is Core.
+
+export const WMS = 'https://view.eumetsat.int/geoserver/ows';
+export const LAYER = 'mtg_fd:rgb_geocolour';
+
+/** The layer's own extent: the part of the flat map that Meteosat-12 can see. */
+export const DISK_EXTENT = { south: -77.35, west: -81.28, north: 77.35, east: 81.28 };
+
+export interface Extent {
+  south: number;
+  west: number;
+  north: number;
+  east: number;
+}
+
+/** Address of a flat-map picture of `extent` at `width` × `height`, for the scan at `when`. */
+export function wmsUrl(extent: Extent, width: number, height: number, when: Date): string {
+  const p = new URLSearchParams({
+    service: 'WMS',
+    version: '1.3.0',
+    request: 'GetMap',
+    layers: LAYER,
+    styles: '',
+    crs: 'EPSG:4326',
+    // WMS 1.3.0 with EPSG:4326 takes latitude first.
+    bbox: [extent.south, extent.west, extent.north, extent.east].join(','),
+    width: String(width),
+    height: String(height),
+    format: 'image/jpeg',
+    time: when.toISOString().replace('.000Z', 'Z'),
+  });
+  return `${WMS}?${p}`;
+}
+
+// ---------- The geostationary view ----------
+
+const H = 42164.16; // satellite distance from Earth's center, km
+const R_EQ = 6378.137; // equatorial radius, km
+const R_POL = 6356.7523; // polar radius, km
+const E2 = (R_EQ * R_EQ) / (R_POL * R_POL); // 1.006739501
+const C = H * H - R_EQ * R_EQ; // 1737122264
+/** How far from straight down, in radians, the Earth's edge is at the equator. */
+export const MAX_SCAN = Math.asin(R_EQ / H);
+
+/** Where a line of sight from the satellite meets the Earth: the standard CGMS formulas for
+ * a geostationary scan. x is the angle east of straight down, y north, both in radians.
+ * Returns null when the line misses the planet. */
+export function scanToLonLat(x: number, y: number, subLon = 0): { lon: number; lat: number } | null {
+  const cx = Math.cos(x);
+  const cy = Math.cos(y);
+  const sy = Math.sin(y);
+  const a = cy * cy + E2 * sy * sy;
+  const d = (H * cx * cy) ** 2 - a * C;
+  if (d < 0) return null;
+  const sn = (H * cx * cy - Math.sqrt(d)) / a;
+  const s1 = H - sn * cx * cy;
+  const s2 = sn * Math.sin(x) * cy;
+  const s3 = sn * sy;
+  const sxy = Math.hypot(s1, s2);
+  const lon = (Math.atan(s2 / s1) * 180) / Math.PI + subLon;
+  const lat = (Math.atan((E2 * s3) / sxy) * 180) / Math.PI;
+  return { lon, lat };
+}
+
+/** The share of the picture's width the planet takes, matching NOAA's whole-Earth pictures,
+ * so both get the same round mask in the viewer. */
+export const DISK_FILL = 0.4994;
+
+/** RGBA pixels, the shape of a canvas ImageData (plain, so the tests can run outside a browser). */
+export interface Pixels {
+  width: number;
+  height: number;
+  data: Uint8ClampedArray;
+}
+
+/** Turns a flat-map picture of DISK_EXTENT into the round planet, `size` pixels square.
+ * Returns the RGBA pixels; space is black. Bilinear sampling. */
+export function reprojectDisk(src: Pixels, size: number, extent: Extent = DISK_EXTENT): Pixels {
+  const out = { width: size, height: size, data: new Uint8ClampedArray(size * size * 4) };
+  const o = out.data;
+  const s = src.data;
+  const sw = src.width;
+  const sh = src.height;
+  const lonSpan = extent.east - extent.west;
+  const latSpan = extent.north - extent.south;
+  const scale = MAX_SCAN / (DISK_FILL * size); // radians per output pixel
+  for (let j = 0; j < size; j++) {
+    const y = (size / 2 - j - 0.5) * scale; // north is up
+    for (let i = 0; i < size; i++) {
+      const k = (j * size + i) * 4;
+      o[k + 3] = 255;
+      const x = (i + 0.5 - size / 2) * scale;
+      const p = scanToLonLat(x, y);
+      if (!p) continue;
+      const u = ((p.lon - extent.west) / lonSpan) * sw - 0.5;
+      const v = ((extent.north - p.lat) / latSpan) * sh - 0.5;
+      if (u < 0 || v < 0 || u > sw - 1 || v > sh - 1) continue;
+      const u0 = Math.floor(u);
+      const v0 = Math.floor(v);
+      const fu = u - u0;
+      const fv = v - v0;
+      const u1 = Math.min(u0 + 1, sw - 1);
+      const v1 = Math.min(v0 + 1, sh - 1);
+      const a = (v0 * sw + u0) * 4;
+      const b = (v0 * sw + u1) * 4;
+      const c = (v1 * sw + u0) * 4;
+      const d = (v1 * sw + u1) * 4;
+      for (let ch = 0; ch < 3; ch++) {
+        const top = s[a + ch] * (1 - fu) + s[b + ch] * fu;
+        const bottom = s[c + ch] * (1 - fu) + s[d + ch] * fu;
+        o[k + ch] = top * (1 - fv) + bottom * fv;
+      }
+    }
+  }
+  return out;
+}
+
+/** How big a flat map to ask for, to fill a `size`-pixel round picture without blur. */
+export function sourceSize(size: number): [number, number] {
+  const w = Math.round(size * 1.5);
+  const h = Math.round((w * (DISK_EXTENT.north - DISK_EXTENT.south)) / (DISK_EXTENT.east - DISK_EXTENT.west));
+  return [w, h];
+}

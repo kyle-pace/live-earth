@@ -10,28 +10,30 @@ import { formatLon } from '../../lib/sun';
 const viewCount = SATELLITES.reduce((n, s) => n + s.views.length, 0);
 // Some regions (the Pacific Northwest, for one) come from both satellites; count them once.
 const regionCount = new Set(SATELLITES.flatMap((s) => s.views.filter((v) => v.group === 'region').map((v) => v.id))).size;
-const [east, west] = ['east', 'west'].map((id) => SATELLITES.find((s) => s.id === id)!);
+const [east, west, meteosat] = ['east', 'west', 'meteosat'].map((id) => SATELLITES.find((s) => s.id === id)!);
+const year = new Date().getUTCFullYear();
 
 const steps = [
   {
     name: 'The satellites scan the planet',
-    where: 'GOES-19 and GOES-18, 35,786 km above the equator',
+    where: 'GOES-19, GOES-18 and Meteosat-12, 35,786 km above the equator',
     body: [
-      `NOAA’s two GOES weather satellites stay over the same spot on the equator as the Earth turns: ${east.name} (${east.craft}) at ${formatLon(east.lon)} and ${west.name} (${west.craft}) at ${formatLon(west.lon)}. Each scans its whole half of the planet every 10 minutes, and the United States and smaller regions every 5 or 10.`,
+      `Three weather satellites stay over the same spot on the equator as the Earth turns: NOAA’s ${west.name} (${west.craft}) at ${formatLon(west.lon)} and ${east.name} (${east.craft}) at ${formatLon(east.lon)}, and EUMETSAT’s ${meteosat.craft} at ${formatLon(meteosat.lon)}, over Africa. Each scans its whole side of the planet every 10 minutes; the GOES pair also scan the United States and smaller regions every 5 or 10.`,
     ],
   },
   {
-    name: 'NOAA turns each scan into a picture',
-    where: 'NOAA’s Center for Satellite Applications and Research (STAR)',
+    name: 'NOAA and EUMETSAT turn each scan into a picture',
+    where: 'NOAA’s Center for Satellite Applications and Research (STAR), and EUMETSAT in Darmstadt',
     body: [
-      'NOAA blends the satellite’s channels into GeoColor: true color in daylight, and at night clouds in blue-gray over city lights. It publishes each picture in several sizes, usually 5 to 25 minutes after the scan starts.',
+      'Both blend the satellite’s channels into a natural-color picture (GeoColor at NOAA, GeoColour at EUMETSAT): true color in daylight, and at night clouds over city lights. NOAA publishes each GOES picture in several sizes, usually 5 to 25 minutes after the scan starts.',
+      'EUMETSAT serves Meteosat as a flat map, cut to any area and size on request. Live Earth uses the scan on the hour, once it’s at least 35 minutes old, which keeps it within EUMETSAT’s free data.',
     ],
   },
   {
     name: 'Your browser finds the newest picture',
     where: 'Your phone or computer',
     body: [
-      'The page works out when the latest scans should have started and asks NOAA’s image server for the smallest copy of each, newest first, until one is there. That small copy shows right away while a full-size one loads, picked to match your screen.',
+      'The page works out when the latest scans should have started and asks for the smallest copy of each, newest first, until one is there. That small copy shows right away while a full-size one loads, picked to match your screen.',
       'Every minute while the page is open, it checks for a newer scan and swaps it in.',
     ],
   },
@@ -39,7 +41,8 @@ const steps = [
     name: 'Your browser trims and shows it',
     where: 'Your phone or computer',
     body: [
-      'NOAA stamps its logo and a caption bar along the bottom of every picture. The page masks the whole-Earth view to a circle, and trims the bottom edge of the others (for some sizes, a thin strip down the left edge too), so what’s left is the planet. Time-lapses load up to 72 smaller frames and play them in order.',
+      'NOAA stamps its logo and a caption bar along the bottom of every picture. The page masks the whole-Earth view to a circle, and trims the bottom edge of the others (for some sizes, a thin strip down the left edge too), so what’s left is the planet.',
+      'Meteosat’s whole Earth arrives as a flat map, so the page bends it back into the round planet the satellite sees, pixel by pixel, using the satellite’s viewing geometry. Europe and Africa show as flat maps. Time-lapses load up to 72 smaller frames and play them in order.',
     ],
   },
 ];
@@ -60,8 +63,9 @@ const steps = [
     <section aria-labelledby="what-title">
       <h2 id="what-title">What it is</h2>
       <p>
-        <a href="/live-earth/">Live Earth</a> shows the newest picture from NOAA’s GOES weather satellites, as big as your
-        screen allows: the whole planet, the United States, or one of {regionCount} regions ({viewCount} views across the two satellites). It’s
+        <a href="/live-earth/">Live Earth</a> shows the newest picture from three weather satellites, as big as your
+        screen allows: the whole planet from over the Pacific, the Americas or Africa, the United States, or one of
+        {regionCount} regions ({viewCount} views in all). It’s
         meant for leaving open on a spare screen, and it’s the first test of a wallpaper and widget app built on the same
         pictures.
       </p>
@@ -100,22 +104,30 @@ const steps = [
     <section aria-labelledby="data-title">
       <h2 id="data-title">Where the data comes from</h2>
       <p>
-        Every picture is GOES GeoColor imagery from NOAA/NESDIS/STAR, loaded straight from
-        <a href="https://www.star.nesdis.noaa.gov/GOES/">NOAA’s GOES Image Viewer</a> service. It’s work of the U.S.
-        government and in the public domain. GeoColor was developed by CIRA at Colorado State University with NOAA. Live
-        Earth isn’t made or endorsed by NOAA.
+        GOES pictures are GeoColor imagery from NOAA/NESDIS/STAR, loaded straight from
+        <a href="https://www.star.nesdis.noaa.gov/GOES/">NOAA’s GOES Image Viewer</a> service. They’re work of the U.S.
+        government and in the public domain. GeoColor was developed by CIRA at Colorado State University with NOAA.
       </p>
+      <p>
+        Meteosat pictures contain modified EUMETSAT Meteosat data {year}: GeoColour imagery from Meteosat-12, loaded from
+        <a href="https://view.eumetsat.int/">EUMETView</a> and used under EUMETSAT’s
+        <a href="https://www.eumetsat.int/eumetsat-data-licensing">data policy</a> for Core data (CC BY 4.0). The
+        whole-Earth view is redrawn in your browser.
+      </p>
+      <p>Live Earth isn’t made or endorsed by NOAA or EUMETSAT.</p>
     </section>
 
     <section aria-labelledby="good-title">
       <h2 id="good-title">Good to know</h2>
       <p>
-        A picture is usually 5 to 25 minutes old, since that’s how long NOAA takes to post a scan. Now and then NOAA skips a
+        A GOES picture is usually 5 to 25 minutes old, since that’s how long NOAA takes to post a scan. A Meteosat picture
+        updates once an hour and is 35 to 95 minutes old, so its time-lapses step an hour at a time. Now and then NOAA skips a
         scan or a satellite goes into maintenance; the page shows the newest one it can find and says how old it is.
       </p>
       <p>
-        The two satellites cover the Americas and the Pacific. Asia, Australia, Europe and Africa are mostly out of their
-        view. Hiding NOAA’s logo and caption costs a thin slice at the bottom or left of each region and the outermost edge of the planet.
+        Together the satellites cover the Pacific, the Americas, the Atlantic, Europe and Africa. Most of Asia and Australia
+        are out of view. Meteosat’s Europe sits low on the planet’s curve from the equator, so the far north looks
+        stretched. Hiding NOAA’s logo and caption costs a thin slice at the bottom or left of each region and the outermost edge of the planet.
       </p>
       <p>
         Pictures are big: a whole-Earth picture is about 2 MB at Standard detail, and a 12-hour time-lapse loads about 25 MB.
@@ -129,8 +141,8 @@ const steps = [
         Analytics works the same as the rest of kylepace.dev: anonymous, no cookies, and you can turn it off (<a
           href="https://kylepace.dev/privacy/">privacy</a
         >). Live Earth records which satellite, view, time-lapse and detail level get picked. Pictures come straight from
-        NOAA’s image server (cdn.star.nesdis.noaa.gov), which sees your request like any visit to a website; the page sends
-        no referrer with it. Your detail choice is kept in your browser.
+        NOAA’s image server (cdn.star.nesdis.noaa.gov) and EUMETSAT’s map service (view.eumetsat.int), which see your
+        request like any visit to a website; the page sends no referrer with it. Your detail choice is kept in your browser.
       </p>
     </section>
 

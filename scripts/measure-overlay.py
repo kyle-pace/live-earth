@@ -10,7 +10,8 @@ from PIL import Image
 
 B = "https://cdn.star.nesdis.noaa.gov"
 src = open(sys.argv[1]).read()
-sats = json.loads(src[src.index("= [") + 2: src.rindex("];") + 1])
+marker = "SATELLITES: Satellite[] = "
+sats = [s for s in json.loads(src[src.index(marker) + len(marker): src.rindex("];") + 1]) if s.get("source") == "noaa"]
 
 def stamp(d): return d.strftime("%Y") + f"{d.timetuple().tm_yday:03d}" + d.strftime("%H%M")
 
