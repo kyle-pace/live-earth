@@ -1,0 +1,294 @@
+---
+// How Live Earth is built: the technical version of the About page, for the curious.
+// Diagrams are inline SVG in the lab's own colors, each with a title, a description and
+// the same facts in the text.
+import LabLayout from 'kp-design/layouts/LabLayout.astro';
+import '../../styles/theme.css';
+import { SATELLITES } from '../../lib/views';
+---
+
+<LabLayout
+  lab={{ name: 'Live Earth', href: '/live-earth/' }}
+  about="/live-earth/about/"
+  title="How Live Earth is built"
+  description="The technical version: five weather satellites from three sources, file names worked out from the clock, and a small Worker that relays and caches what browsers can't fetch directly."
+  image="/live-earth/og-about.png"
+  imageAlt="About Live Earth: the title beside the planet as a weather satellite sees it."
+  themeColor={{ light: '#f3f5f7', dark: '#05080c' }}
+>
+  <article class="page">
+    <h1 class="title">How Live Earth is built</h1>
+    <p class="lede">
+      The <a href="/live-earth/about/">About page</a> says what you're looking at. This is how the pictures get here, with links
+      into <a href="https://github.com/kyle-pace/live-earth">the code</a>.
+    </p>
+
+    <section aria-labelledby="numbers-heading">
+      <h2 id="numbers-heading">The numbers</h2>
+      <dl class="numbers">
+        <div><dt>Satellites</dt><dd>{SATELLITES.length}</dd></div>
+        <div><dt>Sources</dt><dd>3</dd></div>
+        <div><dt>Regions</dt><dd>40</dd></div>
+        <div><dt>File listings read</dt><dd>0</dd></div>
+      </dl>
+    </section>
+
+    <section aria-labelledby="sources-heading">
+      <h2 id="sources-heading">Three sources, one viewer</h2>
+      <figure tabindex="0" role="region" aria-label="Diagram: Where each satellite’s pictures come from. On narrow screens it scrolls sideways.">
+        <svg class="diagram" viewBox="0 0 940 230" role="img" aria-labelledby="sources-title sources-desc">
+          <title id="sources-title">Where each satellite’s pictures come from</title>
+          <desc id="sources-desc">GOES pictures load straight from NOAA into the browser. Meteosat comes from EUMETSAT’s map service and Himawari from CIRA, both through this lab’s Worker, which keeps Meteosat pictures in Workers KV for 14 hours and lets Cloudflare cache Himawari tiles.</desc>
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" class="ink-fill"></path>
+            </marker>
+          </defs>
+          <g class="box"><rect x="10" y="20" width="200" height="50" rx="6"></rect><text x="110.0" y="50.0">NOAA (GOES East, West)</text></g>
+          <g class="box"><rect x="10" y="95" width="200" height="50" rx="6"></rect><text x="110.0" y="125.0">EUMETSAT (2 Meteosats)</text></g>
+          <g class="box"><rect x="10" y="170" width="200" height="50" rx="6"></rect><text x="110.0" y="200.0">CIRA SLIDER (Himawari)</text></g>
+          <g class="box accent"><rect x="330" y="95" width="220" height="70" rx="6"></rect><text x="440.0" y="126.0">This lab’s Worker</text><text x="440.0" y="146.0" class="small">relay, cache, cron job</text></g>
+          <g class="box accent"><rect x="700" y="95" width="230" height="70" rx="6"></rect><text x="815.0" y="126.0">Your browser</text><text x="815.0" y="146.0" class="small">one image at a time</text></g>
+          <path d="M210 45 C450 45 600 70 698 110" class="link" marker-end="url(#arrow)"></path>
+          <path d="M210 120 L328 125" class="link" marker-end="url(#arrow)"></path>
+          <path d="M210 195 C270 195 270 150 328 145" class="link" marker-end="url(#arrow)"></path>
+          <path d="M550 130 L698 130" class="link" marker-end="url(#arrow)"></path>
+          <text x="455" y="34" class="small">straight from NOAA, no referrer</text>
+          <text x="440" y="190" class="small">Meteosat: kept 14 h in Workers KV</text>
+          <text x="440" y="208" class="small">Himawari tiles: cached at the edge</text>
+        </svg>
+      </figure>
+      <ol class="steps">
+        <li>
+          <strong>GOES, straight from NOAA.</strong> The browser loads NOAA's images directly, with no referrer. Nothing in between.
+        </li>
+        <li>
+          <strong>Meteosat, redrawn as a planet.</strong> EUMETSAT's map service only serves flat maps and takes up to 15 seconds to
+          draw one. A cron job at 36 past each hour (<code>src/worker.ts</code>) fetches every size the page uses for the new scan and
+          keeps it 14 hours in Workers KV, about 20 writes an hour, under the free 1,000 a day. The browser bends the flat map back into a
+          round planet on a canvas. Only scans 45 minutes or older are used: under EUMETSAT's policy that's free data.
+        </li>
+        <li>
+          <strong>Himawari, stitched from tiles.</strong> CIRA's SLIDER serves 688-pixel tiles without the headers a browser needs to
+          stitch them, so one Worker route relays exactly two kinds of address (the scan list and a tile) and lets Cloudflare cache them,
+          so each tile is fetched once.
+        </li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="clock-heading">
+      <h2 id="clock-heading">Finding the newest picture from the clock</h2>
+      <figure tabindex="0" role="region" aria-label="Diagram: How the viewer finds a picture. On narrow screens it scrolls sideways.">
+        <svg class="diagram" viewBox="0 0 960 180" role="img" aria-labelledby="clock-title clock-desc">
+          <title id="clock-title">How the viewer finds a picture</title>
+          <desc id="clock-desc">Scans start on a fixed schedule, so the viewer works out the file name for the newest likely scan, tries the smallest size first, then loads a size that fits your screen. If a scan isn’t published yet, it tries the one before.</desc>
+          
+          <line x1="40" y1="60" x2="920" y2="60" class="axis"></line>
+          <line x1="40" y1="52" x2="40" y2="68" class="axis"></line>
+          <line x1="150" y1="52" x2="150" y2="68" class="axis"></line>
+          <line x1="260" y1="52" x2="260" y2="68" class="axis"></line>
+          <line x1="370" y1="52" x2="370" y2="68" class="axis"></line>
+          <line x1="480" y1="52" x2="480" y2="68" class="axis"></line>
+          <line x1="590" y1="52" x2="590" y2="68" class="axis"></line>
+          <line x1="700" y1="52" x2="700" y2="68" class="axis"></line>
+          <line x1="810" y1="52" x2="810" y2="68" class="axis"></line>
+          <line x1="920" y1="52" x2="920" y2="68" class="axis"></line>
+
+          <text x="480" y="30" class="small">scans start on a fixed schedule, so the file name for any time can be worked out</text>
+          <g class="box"><rect x="40" y="90" width="190" height="50" rx="6"></rect><text x="135.0" y="120.0">Newest likely scan</text></g>
+          <g class="box"><rect x="280" y="90" width="190" height="50" rx="6"></rect><text x="375.0" y="120.0">Smallest size first</text></g>
+          <g class="box"><rect x="520" y="90" width="190" height="50" rx="6"></rect><text x="615.0" y="120.0">Loaded? Go bigger</text></g>
+          <g class="box accent"><rect x="760" y="90" width="160" height="50" rx="6"></rect><text x="840.0" y="120.0">Fits your screen</text></g>
+          <path d="M230 115 L278 115" class="link" marker-end="url(#arrow)"></path>
+          <path d="M470 115 L518 115" class="link" marker-end="url(#arrow)"></path>
+          <path d="M710 115 L758 115" class="link" marker-end="url(#arrow)"></path>
+          <text x="375" y="165" class="small">not there yet? try the scan before</text>
+        </svg>
+      </figure>
+      <p>
+        The page never reads NOAA's file listings or calls an API. <code>src/lib/views.ts</code> lists every view and how often scans
+        start, <code>src/lib/goes.ts</code> turns a time into a file name, and the viewer tries the newest likely times with the smallest
+        size (20 to 40 KB) until one loads, then a size big enough for your screen. Tests check the naming rules against real NOAA file
+        names.
+      </p>
+    </section>
+
+    <section aria-labelledby="choices-heading">
+      <h2 id="choices-heading">Choices worth knowing</h2>
+      <ul class="notes-list">
+        <li><strong>No location prompt.</strong> A first visit opens on your time zone's main city, from a small table, so nothing is asked or sent.</li>
+        <li><strong>The right satellite for a place.</strong> <code>bestView</code> picks the satellite that sees a place most nearly straight down, then its smallest region around it.</li>
+        <li><strong>Images over budget, on purpose.</strong> The pictures are the content: about 2 MB at Standard detail. The smallest copy shows first.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="stack-heading">
+      <h2 id="stack-heading">The stack</h2>
+      <ul class="notes-list">
+        <li><strong>Site:</strong> Astro on its own Cloudflare Worker, plus a cron job and Workers KV for Meteosat.</li>
+        <li><strong>Viewer:</strong> plain TypeScript and a canvas; no map library.</li>
+        <li><strong>How I work:</strong> the principles every project follows are in <a href="https://kylepace.dev/how-i-build/">how I build</a>.</li>
+      </ul>
+    </section>
+  </article>
+</LabLayout>
+
+<style>
+  .page {
+    padding: var(--space-4) var(--gutter) var(--space-12);
+    max-width: 64rem;
+  }
+
+  .page h1 {
+    margin: 0 0 var(--space-4);
+    font-size: var(--step-3, var(--step-2));
+    line-height: 1.1;
+  }
+
+  .lede {
+    max-width: 40rem;
+    font-size: var(--step-0);
+  }
+
+  .page section {
+    margin-top: var(--space-12);
+  }
+
+  .page h2 {
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-2);
+    font-size: var(--step-1);
+    font-weight: 700;
+    border-bottom: 3px solid var(--ink);
+  }
+
+  .page a {
+    color: var(--accent-ink);
+    text-underline-offset: 0.15em;
+  }
+
+  .page p,
+  .page li {
+    max-width: 40rem;
+  }
+
+  .page p {
+    margin: 0 0 var(--space-3);
+  }
+
+  .page code {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.92em;
+  }
+
+  .numbers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: var(--space-4);
+    margin: 0;
+  }
+
+  .numbers div {
+    border-top: 3px solid var(--accent);
+    padding-top: var(--space-2);
+  }
+
+  .numbers dt {
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+  }
+
+  .numbers dd {
+    margin: 0;
+    font-size: var(--step-2);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Diagrams keep their size, so their labels stay readable; on a phone they scroll
+     sideways, and can be reached and scrolled with the keyboard. */
+  figure {
+    margin: 0 0 var(--space-6);
+    overflow-x: auto;
+  }
+
+  figure:focus-visible {
+    outline: 3px solid var(--accent-ink);
+    outline-offset: 2px;
+  }
+
+  /* Diagrams in the lab's own colors, so they follow light and dark. */
+  .diagram {
+    display: block;
+    width: 100%;
+    min-width: 40rem;
+    height: auto;
+    font-family: inherit;
+  }
+
+  .diagram text {
+    fill: var(--ink);
+    font-size: 15px;
+    font-weight: 600;
+    text-anchor: middle;
+  }
+
+  .diagram text.small {
+    font-size: 12px;
+    font-weight: 400;
+    fill: var(--ink-muted);
+  }
+
+  .diagram text.left {
+    text-anchor: start;
+  }
+
+  .diagram .box rect {
+    fill: var(--bg-raised, var(--bg));
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+
+  .diagram .box.accent rect {
+    stroke: var(--accent);
+    stroke-width: 3;
+  }
+
+  .diagram .box.muted rect {
+    stroke-dasharray: 5 4;
+    stroke: var(--ink-muted);
+  }
+
+  .diagram .link {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+
+  .diagram .ink-fill {
+    fill: var(--ink);
+  }
+
+  .diagram .axis {
+    stroke: var(--ink-muted);
+    stroke-width: 1.5;
+  }
+
+  .diagram .accent-fill {
+    fill: var(--accent);
+  }
+
+  .diagram .soft-fill {
+    fill: color-mix(in oklab, var(--accent), var(--bg) 70%);
+  }
+
+  .steps,
+  .notes-list {
+    padding-left: 1.25rem;
+  }
+
+  .steps li,
+  .notes-list li {
+    margin-bottom: var(--space-3);
+  }
+</style>
