@@ -11,6 +11,7 @@ import { formatLon } from '../../lib/sun';
 ---
 
 <LabLayout
+  about="/live-earth/about/"
   title="Live Earth"
   description="The whole planet and your corner of it, as five weather satellites see it right now."
   image="/live-earth/og.png"
@@ -18,7 +19,6 @@ import { formatLon } from '../../lib/sun';
   themeColor={{ light: '#f3f5f7', dark: '#05080c' }}
 >
   <link slot="head" rel="preconnect" href="https://cdn.star.nesdis.noaa.gov" />
-  <a slot="bar" class="bar-link" href="/live-earth/about/">About</a>
 
   <div class="live">
     <section class="viewer" data-viewer aria-labelledby="live-title">
