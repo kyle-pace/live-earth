@@ -1,0 +1,8 @@
+# Real file names copied from NOAA's GOES image listings on Nov 15, 2026
+# (cdn.star.nesdis.noaa.gov/<sat>/ABI/<folder>/GEOCOLOR/). One per line: satellite id, view id, file name.
+east earth 20263190900_GOES19-ABI-FD-GEOCOLOR-1808x1808.jpg
+west earth 20263190850_GOES18-ABI-FD-GEOCOLOR-1808x1808.jpg
+east us 20263190916_GOES19-ABI-CONUS-GEOCOLOR-1250x750.jpg
+west pnw 20263190916_GOES18-ABI-pnw-GEOCOLOR-2400x2400.jpg
+west pnw 20263182001_GOES18-ABI-pnw-GEOCOLOR-2400x2400.jpg
+east na 20263190910_GOES19-ABI-na-GEOCOLOR-1800x1080.jpg

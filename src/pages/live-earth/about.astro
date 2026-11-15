@@ -1,0 +1,145 @@
+---
+// About Live Earth. The title, headings, order and step format follow the about-page skill
+// (.agents/skills/about-page/SKILL.md): plain words that are the same on every lab. Counts
+// come from src/lib/views.ts at build time.
+import LabLayout from 'kp-design/layouts/LabLayout.astro';
+import '../../styles/theme.css';
+import { SATELLITES } from '../../lib/views';
+import { formatLon } from '../../lib/sun';
+
+const viewCount = SATELLITES.reduce((n, s) => n + s.views.length, 0);
+// Some regions (the Pacific Northwest, for one) come from both satellites; count them once.
+const regionCount = new Set(SATELLITES.flatMap((s) => s.views.filter((v) => v.group === 'region').map((v) => v.id))).size;
+const [east, west] = ['east', 'west'].map((id) => SATELLITES.find((s) => s.id === id)!);
+
+const steps = [
+  {
+    name: 'The satellites scan the planet',
+    where: 'GOES-19 and GOES-18, 35,786 km above the equator',
+    body: [
+      `NOAA’s two GOES weather satellites stay over the same spot on the equator as the Earth turns: ${east.name} (${east.craft}) at ${formatLon(east.lon)} and ${west.name} (${west.craft}) at ${formatLon(west.lon)}. Each scans its whole half of the planet every 10 minutes, and the United States and smaller regions every 5 or 10.`,
+    ],
+  },
+  {
+    name: 'NOAA turns each scan into a picture',
+    where: 'NOAA’s Center for Satellite Applications and Research (STAR)',
+    body: [
+      'NOAA blends the satellite’s channels into GeoColor: true color in daylight, and at night clouds in blue-gray over city lights. It publishes each picture in several sizes, usually 5 to 25 minutes after the scan starts.',
+    ],
+  },
+  {
+    name: 'Your browser finds the newest picture',
+    where: 'Your phone or computer',
+    body: [
+      'The page works out when the latest scans should have started and asks NOAA’s image server for the smallest copy of each, newest first, until one is there. That small copy shows right away while a full-size one loads, picked to match your screen.',
+      'Every minute while the page is open, it checks for a newer scan and swaps it in.',
+    ],
+  },
+  {
+    name: 'Your browser trims and shows it',
+    where: 'Your phone or computer',
+    body: [
+      'NOAA stamps its logo and a caption bar along the bottom of every picture. The page masks the whole-Earth view to a circle, and trims the bottom edge of the others (for some sizes, a thin strip down the left edge too), so what’s left is the planet. Time-lapses load up to 72 smaller frames and play them in order.',
+    ],
+  },
+];
+---
+
+<LabLayout
+  title="About Live Earth"
+  description="What Live Earth is, how it works and what it collects."
+  image="/live-earth/og-about.png"
+  imageAlt="About Live Earth: what it is and how it works, on kylepace.dev."
+  themeColor={{ light: '#f3f5f7', dark: '#05080c' }}
+>
+  <a slot="bar" class="bar-link" href="/live-earth/">Live Earth</a>
+
+  <article class="lab-page about-page prose">
+    <h1 class="title">About Live Earth</h1>
+
+    <section aria-labelledby="what-title">
+      <h2 id="what-title">What it is</h2>
+      <p>
+        <a href="/live-earth/">Live Earth</a> shows the newest picture from NOAA’s GOES weather satellites, as big as your
+        screen allows: the whole planet, the United States, or one of {regionCount} regions ({viewCount} views across the two satellites). It’s
+        meant for leaving open on a spare screen, and it’s the first test of a wallpaper and widget app built on the same
+        pictures.
+      </p>
+    </section>
+
+    <section aria-labelledby="use-title">
+      <h2 id="use-title">How to use it</h2>
+      <p>
+        Pick a satellite, then a view. The strip above the satellite buttons is the equator: each satellite sits at its real
+        longitude, and the shaded half is the side of the planet in daylight right now, with the sun where it’s noon. The
+        satellite closer to the sun is chosen for you when the page opens.
+      </p>
+      <p>
+        Time plays back the last 3 or 12 hours as a loop; drag the slider to step through frames. Detail set to High uses
+        NOAA’s largest files, up to about 10 MB a picture, for big or very sharp screens. Full screen hides everything but
+        the picture until you move the pointer.
+      </p>
+      <p>The address bar keeps your satellite and view, so you can bookmark or share a view.</p>
+    </section>
+
+    <section aria-labelledby="how-title">
+      <h2 id="how-title">How it works</h2>
+      <ol class="steps">
+        {
+          steps.map((step) => (
+            <li>
+              <h3>{step.name}</h3>
+              <p class="where">Where it runs: {step.where}.</p>
+              {step.body.map((text) => <p>{text}</p>)}
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section aria-labelledby="data-title">
+      <h2 id="data-title">Where the data comes from</h2>
+      <p>
+        Every picture is GOES GeoColor imagery from NOAA/NESDIS/STAR, loaded straight from
+        <a href="https://www.star.nesdis.noaa.gov/GOES/">NOAA’s GOES Image Viewer</a> service. It’s work of the U.S.
+        government and in the public domain. GeoColor was developed by CIRA at Colorado State University with NOAA. Live
+        Earth isn’t made or endorsed by NOAA.
+      </p>
+    </section>
+
+    <section aria-labelledby="good-title">
+      <h2 id="good-title">Good to know</h2>
+      <p>
+        A picture is usually 5 to 25 minutes old, since that’s how long NOAA takes to post a scan. Now and then NOAA skips a
+        scan or a satellite goes into maintenance; the page shows the newest one it can find and says how old it is.
+      </p>
+      <p>
+        The two satellites cover the Americas and the Pacific. Asia, Australia, Europe and Africa are mostly out of their
+        view. Hiding NOAA’s logo and caption costs a thin slice at the bottom or left of each region and the outermost edge of the planet.
+      </p>
+      <p>
+        Pictures are big: a whole-Earth picture is about 2 MB at Standard detail, and a 12-hour time-lapse loads about 25 MB.
+        On a phone plan, Live is the light option.
+      </p>
+    </section>
+
+    <section aria-labelledby="privacy-title">
+      <h2 id="privacy-title">Privacy</h2>
+      <p>
+        Analytics works the same as the rest of kylepace.dev: anonymous, no cookies, and you can turn it off (<a
+          href="https://kylepace.dev/privacy/">privacy</a
+        >). Live Earth records which satellite, view, time-lapse and detail level get picked. Pictures come straight from
+        NOAA’s image server (cdn.star.nesdis.noaa.gov), which sees your request like any visit to a website; the page sends
+        no referrer with it. Your detail choice is kept in your browser.
+      </p>
+    </section>
+
+    <section aria-labelledby="contact-title">
+      <h2 id="contact-title">Get in touch</h2>
+      <p>
+        Questions or something that looks wrong: email <a href="mailto:mail@kylepace.net">mail@kylepace.net</a>. The code is public:{' '}
+        <a href="https://github.com/kyle-pace/live-earth">github.com/kyle-pace/live-earth</a>.
+      </p>
+    </section>
+  </article>
+</LabLayout>

@@ -1,0 +1,580 @@
+---
+// Live Earth, at kylepace.dev/live-earth/. A standalone lab on kp-design's LabLayout. The
+// viewer shows the newest NOAA GOES picture as big as the screen allows; the logic is in
+// src/lib/viewer.ts, the list of views in src/lib/views.ts, and the plan behind the look in
+// design/PLAN.md. The viewer is always black (the pictures are); the page tokens in
+// src/styles/theme.css color the bar, footer and About page.
+import LabLayout from 'kp-design/layouts/LabLayout.astro';
+import '../../styles/theme.css';
+import { SATELLITES } from '../../lib/views';
+import { formatLon } from '../../lib/sun';
+---
+
+<LabLayout
+  title="Live Earth"
+  description="The whole planet and your corner of it, as NOAA’s weather satellites see it right now."
+  image="/live-earth/og.png"
+  imageAlt="Live Earth: the whole planet from a GOES weather satellite, on kylepace.dev."
+  themeColor={{ light: '#f3f5f7', dark: '#05080c' }}
+>
+  <link slot="head" rel="preconnect" href="https://cdn.star.nesdis.noaa.gov" />
+  <a slot="bar" class="bar-link" href="/live-earth/about/">About</a>
+
+  <div class="live">
+    <section class="viewer" data-viewer aria-labelledby="live-title">
+      <h1 class="title live-title" id="live-title">Live Earth</h1>
+      <div class="stage" data-stage>
+        <figure class="frame is-loading" data-frame data-shape="disk">
+          <img data-img alt="Loading the newest satellite picture." referrerpolicy="no-referrer" width="1808" height="1808" />
+        </figure>
+        <p class="status" data-status role="status">Finding the newest picture…</p>
+      </div>
+
+      <div class="readout">
+        <p class="what"><strong data-what>Whole Earth</strong> from <span data-sat-name>GOES</span></p>
+        <p class="when" data-when></p>
+        <p class="credit" data-credit>Imagery: NOAA/NESDIS/STAR, GeoColor.</p>
+      </div>
+
+      <form class="console" aria-label="What to show">
+        <div class="console-head">
+          <button type="button" class="quiet" data-fullscreen hidden>Full screen</button>
+          <button type="button" class="quiet" data-hide>Hide controls</button>
+        </div>
+
+        <fieldset class="group">
+          <legend>Satellite</legend>
+          <svg class="strip" data-strip viewBox="0 0 360 50" aria-hidden="true" focusable="false">
+            <line class="strip-equator" x1="0" y1="26" x2="360" y2="26"></line>
+            <g data-day></g>
+            <g class="strip-sun" data-sun transform="translate(180 26)">
+              <circle r="5"></circle>
+            </g>
+            <text class="strip-sun-label" data-sun-label x="360" y="46" text-anchor="end">Noon</text>
+            {
+              SATELLITES.map((s) => (
+                <g class="strip-sat" data-sat-mark={s.id} transform={`translate(${((s.lon + 180) / 360) * 360} 26)`}>
+                  <rect x="-4" y="-14" width="8" height="8" />
+                  <line x1="0" y1="-6" x2="0" y2="-1" />
+                  <text y="-17" text-anchor="middle">{s.name.replace('GOES ', '')}</text>
+                </g>
+              ))
+            }
+          </svg>
+          <div class="tabs">
+            {
+              SATELLITES.slice()
+                .sort((a, b) => a.lon - b.lon)
+                .map((s) => (
+                  <label class="tab">
+                    <input type="radio" name="sat" value={s.id} />
+                    <span class="tab-name">{s.name}</span>
+                    <span class="tab-sub">
+                      {formatLon(s.lon)}, <span data-light={s.id}>…</span>
+                    </span>
+                  </label>
+                ))
+            }
+          </div>
+        </fieldset>
+
+        <div class="group">
+          <label class="field-label" for="view-select">View</label>
+          <select id="view-select" name="view" data-view-select></select>
+        </div>
+
+        <fieldset class="group">
+          <legend>Time</legend>
+          <div class="tabs tabs-3">
+            <label class="tab"><input type="radio" name="time" value="live" checked /><span class="tab-name">Live</span></label>
+            <label class="tab"><input type="radio" name="time" value="3" /><span class="tab-name">Last 3 hours</span></label>
+            <label class="tab"><input type="radio" name="time" value="12" /><span class="tab-name">Last 12 hours</span></label>
+          </div>
+          <div class="lapse" data-lapse-row hidden>
+            <button type="button" class="play" data-play aria-pressed="false">Play</button>
+            <label class="visually-hidden" for="scrub">Frame</label>
+            <input id="scrub" type="range" min="0" max="0" value="0" step="1" data-scrub />
+          </div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend>Detail</legend>
+          <div class="tabs">
+            <label class="tab">
+              <input type="radio" name="detail" value="standard" checked />
+              <span class="tab-name">Standard</span>
+              <span class="tab-sub">Up to 2,500 px</span>
+            </label>
+            <label class="tab">
+              <input type="radio" name="detail" value="high" />
+              <span class="tab-name">High</span>
+              <span class="tab-sub">Up to 10 MB a picture</span>
+            </label>
+          </div>
+        </fieldset>
+      </form>
+
+      <button type="button" class="show-controls quiet" data-show hidden>Show controls</button>
+    </section>
+  </div>
+</LabLayout>
+
+<script>
+  import '../../lib/viewer';
+</script>
+
+<style>
+  /* The viewer's own colors: always the same, because the pictures are always on black.
+     Named in design/PLAN.md. */
+  .viewer {
+    --space: #030507;
+    --console: rgb(11 16 22 / 0.92);
+    --starlight: #e9eef4;
+    --haze: #a3b3c4;
+    --limb: #8fd4ff;
+    --noon: #ffc56b;
+    --bar-h: 4.25rem;
+
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'title'
+      'stage'
+      'readout'
+      'console';
+    background: var(--space);
+    color: var(--starlight);
+    color-scheme: dark;
+  }
+
+  .viewer :focus-visible {
+    outline: 3px solid var(--limb);
+    outline-offset: 2px;
+  }
+
+  /* ---------- The picture ---------- */
+
+  .stage {
+    grid-area: stage;
+    position: relative;
+    display: grid;
+    place-items: center;
+    container-type: size;
+    /* On a phone the stage is as tall as the picture needs, up to most of the screen. */
+    height: min(calc(100vw / var(--stage-ratio, 1)), 78dvh);
+    min-height: 12rem;
+    overflow: hidden;
+  }
+
+  .frame {
+    --ratio: 1;
+    --trim-left: 0;
+    position: relative;
+    margin: 0;
+    width: min(100cqw, 100cqh * var(--ratio));
+    aspect-ratio: var(--ratio);
+    overflow: hidden;
+  }
+
+  /* The picture is wider than the frame by the left trim and pulled left by the same
+     amount; the frame's proportions (set from the trims in views.ts) cut the bottom. */
+  .frame img {
+    display: block;
+    width: calc(100% / (1 - var(--trim-left)));
+    height: auto;
+    max-width: none;
+    margin-inline-start: calc(-100% * var(--trim-left) / (1 - var(--trim-left)));
+  }
+
+  /* The whole Earth: a round mask hides NOAA's logo in the corner and the caption bar,
+     which overlaps the bottom 1.6% of the planet. The mask sits just inside that bar
+     (radius 48.4%), and the picture is scaled up by the same amount so the planet still
+     fills the frame. */
+  .frame[data-shape='disk'] img {
+    height: 100%;
+    object-fit: cover;
+    scale: 1.033;
+    mask-image: radial-gradient(ellipse 48.4% 48.4% at 50% 50%, #000 99.3%, transparent 100%);
+  }
+
+  /* While the full-size picture loads, NOAA's small copy shows blurred. */
+  .frame.is-loading img {
+    filter: blur(10px) brightness(0.85);
+  }
+
+  .live-title {
+    grid-area: title;
+    justify-self: start;
+    margin: var(--space-2) var(--gutter) var(--space-3);
+    padding: var(--space-1) var(--space-2);
+    border-radius: 3px;
+    background: var(--console);
+    color: var(--starlight);
+    font-size: var(--step-0);
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  .status {
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-4);
+    z-index: 2;
+    translate: -50% 0;
+    max-width: min(30rem, calc(100% - 2 * var(--gutter)));
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: 3px;
+    background: var(--console);
+    color: var(--starlight);
+    font-size: var(--step--1);
+    text-align: center;
+  }
+
+  /* ---------- What you're looking at ---------- */
+
+  .readout {
+    grid-area: readout;
+    padding: var(--space-4) var(--gutter) 0;
+  }
+
+  .readout p {
+    margin: 0;
+  }
+
+  .what {
+    font-size: var(--step-1);
+    line-height: 1.25;
+  }
+
+  .when {
+    margin-top: var(--space-1) !important;
+    color: var(--starlight);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .credit {
+    margin-top: var(--space-1) !important;
+    color: var(--haze);
+    font-size: var(--step--1);
+  }
+
+  /* ---------- The console ---------- */
+
+  .console {
+    grid-area: console;
+    display: grid;
+    gap: var(--space-6);
+    align-content: start;
+    padding: var(--space-6) var(--gutter) var(--space-8);
+    background: var(--console);
+  }
+
+  .console-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    justify-content: flex-end;
+  }
+
+  /* On a phone the console sits under the picture, so there's nothing to hide. */
+  [data-hide] {
+    display: none;
+  }
+
+  .group {
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .group legend,
+  .field-label {
+    padding: 0;
+    margin-bottom: var(--space-2);
+    color: var(--starlight);
+    font-weight: 700;
+  }
+
+  select {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0 var(--space-3);
+    border: 1px solid #5d6c7c;
+    border-radius: 3px;
+    background: #121a23;
+    color: var(--starlight);
+    font: inherit;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    border: 1px solid #5d6c7c;
+    border-radius: 3px;
+  }
+
+  .tabs-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .tab {
+    position: relative;
+    display: grid;
+    align-content: center;
+    gap: 0.1rem;
+    min-height: 2.75rem;
+    padding: var(--space-2) var(--space-3);
+    color: var(--haze);
+    cursor: pointer;
+  }
+
+  .tab + .tab {
+    border-inline-start: 1px solid #5d6c7c;
+  }
+
+  .tab input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .tab-name {
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .tab-sub {
+    font-size: var(--step--1);
+    line-height: 1.3;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The chosen tab: bright text and a Limb bar along its bottom edge (shape, not just color). */
+  .tab:has(input:checked) {
+    background: #16212c;
+    color: var(--starlight);
+    box-shadow: inset 0 -4px 0 var(--limb);
+  }
+
+  .tab:has(input:focus-visible) {
+    outline: 3px solid var(--limb);
+    outline-offset: -3px;
+  }
+
+  .tab:hover {
+    color: var(--starlight);
+  }
+
+  .lapse {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+    margin-top: var(--space-2);
+  }
+
+  .lapse[hidden] {
+    display: none;
+  }
+
+  .lapse input[type='range'] {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.75rem;
+    accent-color: var(--limb);
+  }
+
+  .play,
+  .quiet {
+    min-height: 2.75rem;
+    padding: 0 var(--space-4);
+    border: 1px solid #5d6c7c;
+    border-radius: 3px;
+    background: #121a23;
+    color: var(--starlight);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .play {
+    min-width: 5.5rem;
+    font-weight: 700;
+  }
+
+  .play:hover,
+  .quiet:hover {
+    border-color: var(--limb);
+  }
+
+  /* Top right, clear of the display settings button in the bottom corner. */
+  .show-controls {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--gutter);
+    z-index: 3;
+  }
+
+  .show-controls[hidden] {
+    display: none;
+  }
+
+  /* ---------- The sky strip ---------- */
+
+  .strip {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .strip-equator {
+    stroke: #5d6c7c;
+    stroke-width: 1;
+  }
+
+  .strip :global(.strip-day) {
+    fill: var(--noon);
+    opacity: 0.85;
+  }
+
+  .strip-sun circle {
+    fill: var(--noon);
+    stroke: var(--space);
+    stroke-width: 2;
+  }
+
+  .strip-sun-label,
+  .strip-sat text {
+    fill: var(--haze);
+    font-size: 12px;
+    font-family: inherit;
+  }
+
+  .strip-sat rect {
+    fill: var(--console);
+    stroke: var(--haze);
+    stroke-width: 1.5;
+  }
+
+  .strip-sat line {
+    stroke: var(--haze);
+    stroke-width: 1.5;
+  }
+
+  .strip-sat.is-current rect {
+    fill: var(--limb);
+    stroke: var(--limb);
+  }
+
+  .strip-sat.is-current text {
+    fill: var(--starlight);
+    font-weight: 700;
+  }
+
+  /* ---------- Wide screens: the picture fills the window, the console floats ---------- */
+
+  @media (min-width: 56rem) {
+    .viewer {
+      grid-template-columns: 1fr;
+      grid-template-areas: 'stage';
+      height: calc(100dvh - var(--bar-h));
+      min-height: 32rem;
+    }
+
+    .live-title {
+      position: absolute;
+      top: var(--space-3);
+      left: var(--gutter);
+      z-index: 2;
+      margin: 0;
+    }
+
+    .stage {
+      height: 100%;
+      min-height: 0;
+      padding: var(--space-3) var(--gutter) var(--space-4);
+    }
+
+    /* Keep the picture clear of the console while it's showing. */
+    .viewer:not(.console-hidden) .stage {
+      padding-inline-end: calc(23rem + 2 * var(--gutter));
+    }
+
+    .readout {
+      position: absolute;
+      left: var(--gutter);
+      bottom: var(--space-4);
+      z-index: 2;
+      max-width: min(34rem, calc(100% - 26rem - 3 * var(--gutter)));
+      padding: var(--space-3) var(--space-4);
+      border-radius: 3px;
+      background: var(--console);
+    }
+
+    .console {
+      position: absolute;
+      top: var(--space-3);
+      right: var(--gutter);
+      bottom: var(--space-4);
+      z-index: 2;
+      width: 23rem;
+      overflow-y: auto;
+      padding: var(--space-4) var(--space-4) var(--space-6);
+      border-radius: 3px;
+    }
+
+    [data-hide] {
+      display: inline-block;
+    }
+
+    .viewer.console-hidden .console {
+      display: none;
+    }
+
+    .viewer.console-hidden .readout {
+      max-width: min(34rem, calc(100% - 2 * var(--gutter)));
+    }
+  }
+
+  /* ---------- Full screen: only the picture, until the pointer moves ---------- */
+
+  .viewer.is-full {
+    height: 100dvh;
+  }
+
+  .viewer.is-idle .console,
+  .viewer.is-idle .readout,
+  .viewer.is-idle .live-title,
+  .viewer.is-idle .show-controls {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .viewer.is-idle {
+    cursor: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .console,
+    .readout,
+    .live-title,
+    .show-controls {
+      transition: opacity 250ms var(--ease-out);
+    }
+
+    .frame img {
+      transition: filter 250ms var(--ease-out);
+    }
+  }
+
+  /* The lab page normally sits in a centered column; the viewer uses the whole width. */
+  .live {
+    width: 100%;
+  }
+</style>

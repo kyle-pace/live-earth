@@ -1,0 +1,8 @@
+# Outside hosts this project talks to, beyond its own domain (see the principles).
+# One host per line, each with a comment above it saying what it's for and, for scripts,
+# styles, fonts and APIs, the date Kyle approved it. Empty means the lab only talks to
+# kylepace.dev.
+
+# NOAA/NESDIS/STAR's GOES image server: the satellite pictures themselves (content images,
+# loaded in the browser with no referrer). Added Nov 15, 2026 under the content-image rule.
+cdn.star.nesdis.noaa.gov

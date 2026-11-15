@@ -1,0 +1,100 @@
+/*
+  Live Earth's own look, over kp-design's lab.css (Atkinson, a reset and kp-design's tokens
+  as defaults). The plan behind it is design/PLAN.md: a satellite ground station's receive
+  display. These tokens color the back bar, footer and About page in light and dark; the
+  viewer's fixed space-black colors live in src/pages/live-earth/index.astro.
+*/
+:root {
+  /* Live Earth: a ground station's receive display. Plan in design/PLAN.md. These tokens
+     color the back bar, footer and About page; the viewer itself is always black (see
+     index.astro), because the pictures are. */
+  --bg: light-dark(#f3f5f7, #05080c); /* Page */
+  --bg-raised: light-dark(#ffffff, #0e141b); /* Panels */
+  --ink: light-dark(#0d141c, #e9eef4); /* Text */
+  --ink-muted: light-dark(#475667, #a3b3c4); /* Secondary text: 6.9:1 and 9.4:1 */
+  --line: light-dark(#d5dce4, #1e2833); /* Decorative lines only */
+  --accent: light-dark(#0b5d8f, #8fd4ff); /* Limb: the blue glow at Earth's edge */
+  --accent-ink: light-dark(#0b5d8f, #8fd4ff); /* Links and focus: 6.5:1 and 12.5:1 */
+  --radius: 3px;
+  --radius-sm: 3px;
+}
+
+/* ---------- Scaffolding every lab page uses. Restyle freely. ---------- */
+
+/* The page column. The app comes first and can use the full width; prose stays narrow. */
+.lab-page {
+  width: min(100% - 2 * var(--gutter), var(--wide));
+  margin-inline: auto;
+  padding-bottom: var(--space-12);
+}
+
+/* One line of title, then the app. No lede, no tagline. */
+.title {
+  margin-block: var(--space-2) var(--space-6);
+  font-size: var(--step-3);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+/* "About" (and "Back to the lab" on the About page) on the right of the top bar. */
+.bar-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding-inline: var(--space-2);
+  margin-inline-end: calc(-1 * var(--space-2));
+  border-radius: var(--radius-sm);
+  color: var(--ink-muted);
+  font-size: var(--step--1);
+  text-decoration: none;
+}
+
+.bar-link:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.prose p,
+.prose li {
+  max-width: var(--measure);
+}
+
+.prose a {
+  text-underline-offset: 0.15em;
+}
+
+/* ---------- The About page (headings and steps from the about-page skill) ---------- */
+
+.about-page section {
+  margin-bottom: var(--space-12);
+}
+
+.about-page h2 {
+  margin: 0 0 var(--space-4);
+  font-size: var(--step-1);
+  font-weight: 700;
+}
+
+.about-page p {
+  margin: 0 0 var(--space-3);
+}
+
+.steps {
+  display: grid;
+  gap: var(--space-8);
+  max-width: var(--measure);
+  margin: 0;
+  padding-inline-start: var(--space-6);
+}
+
+.steps h3 {
+  margin: 0 0 var(--space-1);
+  font-size: var(--step-0);
+  font-weight: 700;
+}
+
+.steps .where {
+  color: var(--ink-muted);
+  font-size: var(--step--1);
+}

@@ -1,0 +1,26 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+/* Share card for kylepace.dev/live-earth/ (public/live-earth/og.png). Render with npm run og
+   (share-card skill). The planet is a real GOES-19 GeoColor picture from Nov 14, 2026
+   (NOAA, public domain), masked like the viewer masks it. */
+@font-face{font-family:A;src:url("../node_modules/@fontsource/atkinson-hyperlegible-next/files/atkinson-hyperlegible-next-latin-400-normal.woff2")}
+@font-face{font-family:A;font-weight:700;src:url("../node_modules/@fontsource/atkinson-hyperlegible-next/files/atkinson-hyperlegible-next-latin-700-normal.woff2")}
+:root{--bg:#030507;--ink:#e9eef4;--muted:#a3b3c4;--limb:#8fd4ff}
+html,body{margin:0}
+body{width:1200px;height:630px;background:var(--bg);color:var(--ink);font-family:A;overflow:hidden;position:relative}
+.earth{position:absolute;right:-250px;top:-115px;width:860px;height:860px;border-radius:50%;box-shadow:0 0 60px 6px rgba(143,212,255,.18)}
+.card{position:relative;box-sizing:border-box;width:600px;height:630px;padding:72px;display:flex;flex-direction:column;justify-content:space-between}
+.site{font-size:30px;color:var(--muted)}
+.site b{color:var(--limb);font-weight:700}
+h1{margin:0;font-size:96px;line-height:1.02;letter-spacing:-0.02em;font-weight:700}
+.sub{margin:28px 0 0;font-size:34px;line-height:1.35;color:var(--muted)}
+</style></head><body>
+<img class="earth" src="earth-card.jpg" alt="">
+<div class="card">
+  <div class="site">kylepace.dev/<b>live-earth</b></div>
+  <div>
+    <h1>Live Earth</h1>
+    <p class="sub">The planet as NOAA’s weather satellites see it right now.</p>
+  </div>
+  <div class="site">A lab by Kyle Pace</div>
+</div>
+</body></html>

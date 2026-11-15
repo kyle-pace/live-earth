@@ -1,0 +1,26 @@
+{
+  "name": "live-earth",
+  "version": "0.1.0",
+  "description": "The whole planet and your corner of it, as NOAA’s weather satellites see it right now.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "npm run build && wrangler dev",
+    "astro": "astro",
+    "check": "node .agents/skills/page-check/check.mjs",
+    "og": "node scripts/og.mjs",
+    "test": "node --experimental-strip-types --no-warnings --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.4.6",
+    "astro": "^7.4.7",
+    "kp-design": "github:kyle-pace/kp-design#214b5d5c932308c49fac6c70e53a53ea509831e1"
+  },
+  "devDependencies": {
+    "axe-core": "^4.14.0",
+    "playwright": "^1.65.1",
+    "wrangler": "^4.158.0"
+  }
+}
