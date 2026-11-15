@@ -12,7 +12,8 @@ const slug = JSON.parse(readFileSync('package.json', 'utf8')).name;
 const cards = readdirSync('design').filter((f) => /^og.*\.html$/.test(f));
 if (!cards.length) throw new Error('No design/og*.html files to render.');
 
-const browser = await chromium.launch();
+// CHROME points at an installed Chrome instead, the same as for npm run check.
+const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
 for (const card of cards) {
   await page.goto(pathToFileURL(resolve('design', card)).href);

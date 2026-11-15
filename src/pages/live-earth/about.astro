@@ -8,41 +8,54 @@ import { SATELLITES } from '../../lib/views';
 import { formatLon } from '../../lib/sun';
 
 const viewCount = SATELLITES.reduce((n, s) => n + s.views.length, 0);
-// Some regions (the Pacific Northwest, for one) come from both satellites; count them once.
-const regionCount = new Set(SATELLITES.flatMap((s) => s.views.filter((v) => v.group === 'region').map((v) => v.id))).size;
-const [east, west, meteosat] = ['east', 'west', 'meteosat'].map((id) => SATELLITES.find((s) => s.id === id)!);
+// Some regions (the Pacific Northwest, for one) come from both GOES satellites; count them once.
+const regionCount = new Set(
+  SATELLITES.flatMap((s) => s.views.filter((v) => v.group === 'region').map((v) => `${s.source}:${v.id}`)),
+).size;
+const byId = Object.fromEntries(SATELLITES.map((s) => [s.id, s]));
 const year = new Date().getUTCFullYear();
+
+// The satellites table, west to east.
+const fleet = [
+  { id: 'west', sees: 'The Pacific, Hawaii, Alaska and the western U.S.', every: 'Every 10 minutes', from: 'NOAA' },
+  { id: 'east', sees: 'North and South America and the Atlantic', every: 'Every 10 minutes', from: 'NOAA' },
+  { id: 'meteosat', sees: 'Europe, Africa and the Atlantic', every: 'Every hour', from: 'EUMETSAT' },
+  { id: 'indian', sees: 'The Middle East, India and the Indian Ocean', every: 'Every hour', from: 'EUMETSAT' },
+  { id: 'himawari', sees: 'East Asia, Australia and the western Pacific', every: 'Every 10 minutes', from: 'JMA, via CIRA' },
+].map((row) => ({ ...row, sat: byId[row.id] }));
 
 const steps = [
   {
     name: 'The satellites scan the planet',
-    where: 'GOES-19, GOES-18 and Meteosat-12, 35,786 km above the equator',
+    where: 'Five weather satellites, 35,786 km above the equator',
     body: [
-      `Three weather satellites stay over the same spot on the equator as the Earth turns: NOAA’s ${west.name} (${west.craft}) at ${formatLon(west.lon)} and ${east.name} (${east.craft}) at ${formatLon(east.lon)}, and EUMETSAT’s ${meteosat.craft} at ${formatLon(meteosat.lon)}, over Africa. Each scans its whole side of the planet every 10 minutes; the GOES pair also scan the United States and smaller regions every 5 or 10.`,
+      'Each one hovers over the same spot on the equator as the Earth turns, so it always sees the same side of the planet. Together they ring the whole Earth: two from NOAA over the Americas, two from EUMETSAT over Africa and the Indian Ocean, and one from Japan’s weather agency over the western Pacific. Each scans its whole side every 10 or 15 minutes; the GOES pair also scan the United States and smaller regions every 5 or 10.',
     ],
   },
   {
-    name: 'NOAA and EUMETSAT turn each scan into a picture',
-    where: 'NOAA’s Center for Satellite Applications and Research (STAR), and EUMETSAT in Darmstadt',
+    name: 'Weather agencies turn each scan into a picture',
+    where: 'NOAA in Maryland, EUMETSAT in Darmstadt, and CIRA at Colorado State University',
     body: [
-      'Both blend the satellite’s channels into a natural-color picture (GeoColor at NOAA, GeoColour at EUMETSAT): true color in daylight, and at night clouds over city lights. NOAA publishes each GOES picture in several sizes, usually 5 to 25 minutes after the scan starts.',
-      'EUMETSAT serves Meteosat as a flat map, cut to any area and size on request. Live Earth uses the scan on the hour, once it’s at least 35 minutes old, which keeps it within EUMETSAT’s free data.',
+      'They blend each scan’s channels into a natural-color picture: true color in daylight, and on GeoColor pictures, clouds over city lights at night. NOAA publishes each GOES picture in several sizes, usually 5 to 25 minutes after the scan starts.',
+      'EUMETSAT serves its two Meteosats as flat maps, cut to any area and size on request. Live Earth uses the scan on the hour once it’s at least 35 minutes old, which keeps it within EUMETSAT’s free data.',
+      'CIRA, the lab that created GeoColor, makes Himawari pictures and serves them as square map tiles for its SLIDER viewer.',
     ],
   },
   {
     name: 'Your browser finds the newest picture',
-    where: 'Your phone or computer',
+    where: 'Your phone or computer, and for Himawari, this lab’s server on Cloudflare',
     body: [
-      'The page works out when the latest scans should have started and asks for the smallest copy of each, newest first, until one is there. That small copy shows right away while a full-size one loads, picked to match your screen.',
+      'For GOES and Meteosat, the page works out when the latest scan should have started and asks for the smallest copy, newest first, until one is there. That small copy shows right away while a full-size one loads, picked to match your screen.',
+      'For Himawari, the page asks CIRA which scans it has. CIRA’s server doesn’t let other sites’ scripts read its tiles, so Live Earth’s own small server on Cloudflare fetches each tile and passes it on, keeping a copy so CIRA only serves each tile once.',
       'Every minute while the page is open, it checks for a newer scan and swaps it in.',
     ],
   },
   {
-    name: 'Your browser trims and shows it',
+    name: 'Your browser puts the picture together and shows it',
     where: 'Your phone or computer',
     body: [
-      'NOAA stamps its logo and a caption bar along the bottom of every picture. The page masks the whole-Earth view to a circle, and trims the bottom edge of the others (for some sizes, a thin strip down the left edge too), so what’s left is the planet.',
-      'Meteosat’s whole Earth arrives as a flat map, so the page bends it back into the round planet the satellite sees, pixel by pixel, using the satellite’s viewing geometry. Europe and Africa show as flat maps. Time-lapses load up to 72 smaller frames and play them in order.',
+      'NOAA stamps its logo and a caption bar along the bottom of every picture. The page masks the whole-Earth view to a circle, and trims the bottom edge of the others, so what’s left is the planet.',
+      'Meteosat’s whole Earth arrives as a flat map, so the page bends it back into the round planet the satellite sees, pixel by pixel, using the satellite’s viewing geometry. Himawari arrives in tiles, which the page stitches together, cutting out a region when you pick one. Time-lapses load up to 72 smaller frames and play them in order.',
     ],
   },
 ];
@@ -63,9 +76,9 @@ const steps = [
     <section aria-labelledby="what-title">
       <h2 id="what-title">What it is</h2>
       <p>
-        <a href="/live-earth/">Live Earth</a> shows the newest picture from three weather satellites, as big as your
-        screen allows: the whole planet from over the Pacific, the Americas or Africa, the United States, or one of
-        {regionCount} regions ({viewCount} views in all). It’s
+        <a href="/live-earth/">Live Earth</a> shows the newest picture from five weather satellites spaced around the
+        equator, as big as your screen allows: the whole planet from any of them, the United States, or
+        one of {regionCount} regions ({viewCount} views in all). It’s
         meant for leaving open on a spare screen, and it’s the first test of a wallpaper and widget app built on the same
         pictures.
       </p>
@@ -76,11 +89,11 @@ const steps = [
       <p>
         Pick a satellite, then a view. The strip above the satellite buttons is the equator: each satellite sits at its real
         longitude, and the shaded half is the side of the planet in daylight right now, with the sun where it’s noon. The
-        satellite closer to the sun is chosen for you when the page opens.
+        satellite closest to the sun is chosen for you when the page opens.
       </p>
       <p>
         Time plays back the last 3 or 12 hours as a loop; drag the slider to step through frames. Detail set to High uses
-        NOAA’s largest files, up to about 10 MB a picture, for big or very sharp screens. Full screen hides everything but
+        the largest pictures, up to about 10 MB each, for big or very sharp screens. Full screen hides everything but
         the picture until you move the pointer.
       </p>
       <p>The address bar keeps your satellite and view, so you can bookmark or share a view.</p>
@@ -103,34 +116,62 @@ const steps = [
 
     <section aria-labelledby="data-title">
       <h2 id="data-title">Where the data comes from</h2>
+      <div class="table-wrap">
+        <table>
+          <caption id="fleet-caption">The five satellites, from west to east</caption>
+          <thead>
+            <tr><th scope="col">Satellite</th><th scope="col">Over</th><th scope="col">Sees</th><th scope="col">New picture</th><th scope="col">From</th></tr>
+          </thead>
+          <tbody>
+            {
+              fleet.map((row) => (
+                <tr>
+                  <th scope="row">{row.sat.name} <span class="craft">({row.sat.craft})</span></th>
+                  <td class="num" data-label="Over">{formatLon(row.sat.lon)}</td>
+                  <td data-label="Sees">{row.sees}</td>
+                  <td data-label="New picture">{row.every}</td>
+                  <td data-label="From">{row.from}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
       <p>
-        GOES pictures are GeoColor imagery from NOAA/NESDIS/STAR, loaded straight from
-        <a href="https://www.star.nesdis.noaa.gov/GOES/">NOAA’s GOES Image Viewer</a> service. They’re work of the U.S.
+        GOES pictures are GeoColor imagery from NOAA/NESDIS/STAR, loaded straight from <a
+          href="https://www.star.nesdis.noaa.gov/GOES/">NOAA’s GOES Image Viewer</a> service. They’re work of the U.S.
         government and in the public domain. GeoColor was developed by CIRA at Colorado State University with NOAA.
       </p>
       <p>
-        Meteosat pictures contain modified EUMETSAT Meteosat data {year}: GeoColour imagery from Meteosat-12, loaded from
-        <a href="https://view.eumetsat.int/">EUMETView</a> and used under EUMETSAT’s
-        <a href="https://www.eumetsat.int/eumetsat-data-licensing">data policy</a> for Core data (CC BY 4.0). The
-        whole-Earth view is redrawn in your browser.
+        Meteosat pictures contain modified EUMETSAT Meteosat data {year}: GeoColour imagery from Meteosat-12 and Natural
+        Colour Enhanced imagery from Meteosat-9, loaded from <a href="https://view.eumetsat.int/">EUMETView</a> and used
+        under EUMETSAT’s <a href="https://www.eumetsat.int/eumetsat-data-licensing">data policy</a> for Core data (CC BY
+        4.0). Their whole-Earth views are redrawn in your browser.
       </p>
-      <p>Live Earth isn’t made or endorsed by NOAA or EUMETSAT.</p>
+      <p>
+        Himawari pictures are GeoColor imagery from <a href="https://slider.cira.colostate.edu/">CIRA/RAMMB SLIDER</a> at
+        Colorado State University, made from Himawari-9 data from the Japan Meteorological Agency.
+      </p>
+      <p>Live Earth isn’t made or endorsed by NOAA, EUMETSAT, CIRA or JMA.</p>
     </section>
 
     <section aria-labelledby="good-title">
       <h2 id="good-title">Good to know</h2>
       <p>
-        A GOES picture is usually 5 to 25 minutes old, since that’s how long NOAA takes to post a scan. A Meteosat picture
-        updates once an hour and is 35 to 95 minutes old, so its time-lapses step an hour at a time. Now and then NOAA skips a
+        A GOES picture is usually 5 to 25 minutes old, since that’s how long NOAA takes to post a scan, and a Himawari one
+        20 to 40 minutes. The two Meteosats update once an hour and are 35 to 95 minutes old, so their time-lapses step
+        an hour at a time. Now and then NOAA skips a
         scan or a satellite goes into maintenance; the page shows the newest one it can find and says how old it is.
       </p>
       <p>
-        Together the satellites cover the Pacific, the Americas, the Atlantic, Europe and Africa. Most of Asia and Australia
-        are out of view. Meteosat’s Europe sits low on the planet’s curve from the equator, so the far north looks
-        stretched. Hiding NOAA’s logo and caption costs a thin slice at the bottom or left of each region and the outermost edge of the planet.
+        Between them the satellites see every part of the planet except the poles, which sit too low on the Earth’s
+        curve to make out. Places near the edge of a satellite’s view, like northern Europe from Meteosat, look
+        stretched. Meteosat Indian Ocean is an older satellite: its colors are flatter and it shows nothing at night,
+        with no city lights. Hiding NOAA’s logo and caption costs a thin slice at the bottom or left of each region and the outermost edge of the planet.
       </p>
       <p>
-        Pictures are big: a whole-Earth picture is about 2 MB at Standard detail, and a 12-hour time-lapse loads about 25 MB.
+        Pictures are big: a whole-Earth picture is about 2 MB at Standard detail (Himawari’s is closer to 8 MB), and a
+        12-hour time-lapse loads 25 to 60 MB.
         On a phone plan, Live is the light option.
       </p>
     </section>
@@ -140,9 +181,10 @@ const steps = [
       <p>
         Analytics works the same as the rest of kylepace.dev: anonymous, no cookies, and you can turn it off (<a
           href="https://kylepace.dev/privacy/">privacy</a
-        >). Live Earth records which satellite, view, time-lapse and detail level get picked. Pictures come straight from
-        NOAA’s image server (cdn.star.nesdis.noaa.gov) and EUMETSAT’s map service (view.eumetsat.int), which see your
-        request like any visit to a website; the page sends no referrer with it. Your detail choice is kept in your browser.
+        >). Live Earth records which satellite, view, time-lapse and detail level get picked. GOES and Meteosat pictures come
+        straight from NOAA’s image server (cdn.star.nesdis.noaa.gov) and EUMETSAT’s map service (view.eumetsat.int), which
+        see your request like any visit to a website; the page sends no referrer with it. Himawari pictures come through
+        Live Earth’s own server, so CIRA never sees your visit. Your detail choice is kept in your browser.
       </p>
     </section>
 
@@ -155,3 +197,74 @@ const steps = [
     </section>
   </article>
 </LabLayout>
+
+<style>
+  .table-wrap {
+    overflow-x: auto;
+    margin-block: var(--space-4, 1.5rem);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--step--1, 0.9rem);
+  }
+  caption {
+    text-align: start;
+    font-weight: 700;
+    padding-block-end: var(--space-2, 0.5rem);
+  }
+  th,
+  td {
+    text-align: start;
+    vertical-align: top;
+    padding: 0.5rem 0.75rem 0.5rem 0;
+    border-block-end: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  }
+  thead th {
+    font-weight: 700;
+  }
+  tbody th {
+    font-weight: 700;
+  }
+  .craft {
+    font-weight: 400;
+    white-space: nowrap;
+  }
+  .num {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  /* On narrow screens each satellite becomes its own short block, labels beside values. */
+  @media (max-width: 40rem) {
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    tr,
+    tbody th,
+    td {
+      display: block;
+    }
+    tr {
+      padding-block: 0.75rem;
+      border-block-end: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+    }
+    tbody th,
+    td {
+      border: 0;
+      padding: 0.1rem 0;
+    }
+    td {
+      display: grid;
+      grid-template-columns: 7rem 1fr;
+      gap: 0.75rem;
+    }
+    td::before {
+      content: attr(data-label);
+      font-weight: 700;
+    }
+  }
+</style>

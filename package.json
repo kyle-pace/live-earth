@@ -1,7 +1,7 @@
 {
   "name": "live-earth",
   "version": "0.1.0",
-  "description": "The whole planet and your corner of it, as NOAA’s weather satellites see it right now.",
+  "description": "The whole planet and your corner of it, as five weather satellites see it right now.",
   "private": true,
   "type": "module",
   "scripts": {

@@ -1,6 +1,6 @@
 ---
 // Live Earth, at kylepace.dev/live-earth/. A standalone lab on kp-design's LabLayout. The
-// viewer shows the newest NOAA GOES picture as big as the screen allows; the logic is in
+// viewer shows the newest satellite picture as big as the screen allows; the logic is in
 // src/lib/viewer.ts, the list of views in src/lib/views.ts, and the plan behind the look in
 // design/PLAN.md. The viewer is always black (the pictures are); the page tokens in
 // src/styles/theme.css color the bar, footer and About page.
@@ -12,7 +12,7 @@ import { formatLon } from '../../lib/sun';
 
 <LabLayout
   title="Live Earth"
-  description="The whole planet and your corner of it, as NOAA’s weather satellites see it right now."
+  description="The whole planet and your corner of it, as five weather satellites see it right now."
   image="/live-earth/og.png"
   imageAlt="Live Earth: the whole planet from a GOES weather satellite, on kylepace.dev."
   themeColor={{ light: '#f3f5f7', dark: '#05080c' }}
@@ -56,7 +56,8 @@ import { formatLon } from '../../lib/sun';
                 <g class="strip-sat" data-sat-mark={s.id} transform={`translate(${((s.lon + 180) / 360) * 360} 26)`}>
                   <rect x="-4" y="-14" width="8" height="8" />
                   <line x1="0" y1="-6" x2="0" y2="-1" />
-                  <text y="-17" text-anchor="middle">{s.name.replace('GOES ', '')}</text>
+                  {/* Meteosat and Meteosat Indian Ocean sit close together, so that one's label goes under the line. */}
+                  <text y={s.id === 'indian' ? 18 : -17} text-anchor="middle">{s.short ?? s.name.replace('GOES ', '')}</text>
                 </g>
               ))
             }

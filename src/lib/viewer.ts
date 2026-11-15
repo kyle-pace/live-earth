@@ -6,7 +6,8 @@
 // kylepace.dev's anonymous analytics.
 import { SATELLITES, type Satellite, type Size, type View } from './views';
 import { alignDown, candidates, imageUrl, lapseFrames, lapseSize, pickSize } from './goes';
-import { DISK_EXTENT, reprojectDisk, sourceSize, wmsUrl } from './eumetsat';
+import { DISK_EXTENT, LAYER, reprojectDisk, sourceSize, wmsUrl } from './eumetsat';
+import { FILL, parseTimes, tilePlan, tileUrl, timesUrl, zoomFor, type Box } from './cira';
 import { formatLon, lightingFor, subsolarPoint } from './sun';
 import { track } from './track';
 
@@ -118,20 +119,52 @@ async function toImage(canvas: HTMLCanvasElement): Promise<HTMLImageElement> {
 /** One picture of a view at a size, from whichever service has it. */
 async function loadPicture(s: Satellite, v: View, when: Date, size: Size): Promise<HTMLImageElement> {
   if (s.source === 'noaa') return load(imageUrl(s, v, when, size));
-  if (v.shape === 'rect' && v.extent) return load(wmsUrl(v.extent, size[0], size[1], when));
-  // Meteosat's whole Earth: fetch the flat map, then redraw it as the round planet.
-  const [sw, sh] = sourceSize(size[0]);
-  const flat = await load(wmsUrl(DISK_EXTENT, sw, sh, when), true);
+  if (s.source === 'cira') return stitchTiles(v.box ?? [0, 0, 1, 1], v.shape === 'disk', when, size);
+  const layer = s.layer ?? LAYER;
+  if (v.shape === 'rect' && v.extent) return load(wmsUrl(v.extent, size[0], size[1], when, layer));
+  // A Meteosat whole Earth: fetch the flat map, then redraw it as the round planet.
+  const extent = s.diskExtent ?? DISK_EXTENT;
+  const [sw, sh] = sourceSize(size[0], extent);
+  const flat = await load(wmsUrl(extent, sw, sh, when, layer), true);
   const src = document.createElement('canvas');
   src.width = sw;
   src.height = sh;
   const sctx = src.getContext('2d', { willReadFrequently: true })!;
   sctx.drawImage(flat, 0, 0, sw, sh);
-  const round = reprojectDisk(sctx.getImageData(0, 0, sw, sh), size[0]);
+  const round = reprojectDisk(sctx.getImageData(0, 0, sw, sh), size[0], extent, s.lon);
   const out = document.createElement('canvas');
   out.width = out.height = size[0];
   out.getContext('2d')!.putImageData(new ImageData(round.data, size[0], size[0]), 0, 0);
   return toImage(out);
+}
+
+/** Himawari: fetch the tiles a view needs from this lab's relay and draw them on a canvas. The
+ * whole disk is scaled slightly so the planet fills the picture the way NOAA's does. */
+async function stitchTiles(box: Box, disk: boolean, when: Date, size: Size): Promise<HTMLImageElement> {
+  const [w, h] = size;
+  const zoom = zoomFor(box, w);
+  const plan = tilePlan(box, zoom, w, h, disk ? 0.4994 / FILL : 1);
+  const tiles = await Promise.all(plan.map((t) => load(tileUrl(when, zoom, t.row, t.col))));
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, w, h);
+  // Round each tile's edges out a pixel so no seams show between them.
+  plan.forEach((t, i) => {
+    const x = Math.floor(t.x);
+    const y = Math.floor(t.y);
+    ctx.drawImage(tiles[i], x, y, Math.ceil(t.x + t.size) - x, Math.ceil(t.y + t.size) - y);
+  });
+  return toImage(canvas);
+}
+
+/** CIRA lists the scans it has; the page asks for that list through its relay. */
+async function ciraTimes(): Promise<Date[]> {
+  const res = await fetch(timesUrl());
+  if (!res.ok) return [];
+  return parseTimes(await res.json());
 }
 
 /** The scan times to try, newest first. NOAA posts each GOES scan 5 to 25 minutes after it
@@ -139,8 +172,9 @@ async function loadPicture(s: Satellite, v: View, when: Date, size: Size): Promi
  * has, so probing can't tell; instead the page asks for the latest on-the-hour scan that's at
  * least 35 minutes old (EUMETSAT posts in about 25), which is also what keeps it within
  * EUMETSAT's free "Core" data. */
-function scanTimes(s: Satellite, v: View): Date[] {
+async function scanTimes(s: Satellite, v: View): Promise<Date[]> {
   if (s.source === 'noaa') return candidates(new Date(), v);
+  if (s.source === 'cira') return ciraTimes().catch(() => []);
   const first = alignDown(new Date(Date.now() - 35 * 60_000), v);
   return [first, new Date(first.getTime() - 3_600_000)];
 }
@@ -148,7 +182,7 @@ function scanTimes(s: Satellite, v: View): Date[] {
 /** Tries scan times newest first with the smallest picture, which is quick to fetch and
  * doubles as a placeholder while the full-size one loads. */
 async function findLatest(s: Satellite, v: View): Promise<{ when: Date; preview: HTMLImageElement } | null> {
-  for (const when of scanTimes(s, v)) {
+  for (const when of await scanTimes(s, v)) {
     try {
       const preview = await loadPicture(s, v, when, v.sizes[0]);
       return { when, preview };
@@ -269,10 +303,15 @@ function renderWhen() {
 function renderWhat() {
   whatEl.textContent = view.label;
   $<HTMLElement>('[data-sat-name]', root).textContent = sat.name;
-  creditEl.textContent =
-    sat.source === 'noaa'
-      ? `Imagery: NOAA/NESDIS/STAR, ${sat.craft} GeoColor.`
-      : `Imagery: contains modified EUMETSAT Meteosat data ${new Date().getUTCFullYear()}, ${sat.craft} GeoColour.`;
+  creditEl.textContent = credit(sat);
+}
+
+function credit(s: Satellite) {
+  const year = new Date().getUTCFullYear();
+  if (s.source === 'noaa') return `Imagery: NOAA/NESDIS/STAR, ${s.craft} GeoColor.`;
+  if (s.source === 'cira') return `Imagery: CIRA/RAMMB SLIDER, ${s.craft} GeoColor. Himawari data from JMA.`;
+  const product = s.layer?.includes('natural') ? 'Natural Colour' : 'GeoColour';
+  return `Imagery: contains modified EUMETSAT Meteosat data ${year}, ${s.craft} ${product}.`;
 }
 
 function altText(when: Date) {

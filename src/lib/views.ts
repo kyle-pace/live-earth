@@ -14,11 +14,14 @@
 // start of the scan in UTC. New scans start every `cadence` minutes, at minutes ending in
 // `offset` (0, 10, 20... or 1, 6, 11...).
 
-// Meteosat (source 'eumetsat') works differently: its pictures come from EUMETSAT's map
-// service as flat maps of an `extent`, at any size, every hour; see src/lib/eumetsat.ts. Its
-// sizes have no trims, since EUMETSAT adds no logo or caption.
+// Meteosat and Meteosat Indian Ocean (source 'eumetsat') work differently: their pictures come
+// from EUMETSAT's map service as flat maps of an `extent`, at any size, every hour; see
+// src/lib/eumetsat.ts. Himawari (source 'cira') comes from CIRA's SLIDER as map tiles, and its
+// regions are `box`es cut from the full disk; see src/lib/cira.ts. Neither adds a logo or
+// caption, so their sizes have no trims.
 
 import type { Extent } from './eumetsat';
+import type { Box } from './cira';
 
 export interface View {
   id: string;
@@ -31,18 +34,27 @@ export interface View {
   sizes: Size[];
   /** Meteosat regions only: the part of the flat map to show. */
   extent?: Extent;
+  /** Himawari only: the part of CIRA's full-disk picture to show, as fractions of its width
+   * and height (the whole disk is [0, 0, 1, 1]). Regions were worked out from latitude and
+   * longitude boxes with the geostationary formulas. */
+  box?: Box;
 }
 
 /** [width, height, trim bottom, trim left] */
 export type Size = [number, number, number, number];
 
 export interface Satellite {
-  id: 'east' | 'west' | 'meteosat';
+  id: 'east' | 'west' | 'meteosat' | 'indian' | 'himawari';
   code: string;
   name: string;
+  /** Label on the sky strip, when the name is too long for it. */
+  short?: string;
   craft: string;
   lon: number;
-  source: 'noaa' | 'eumetsat';
+  source: 'noaa' | 'eumetsat' | 'cira';
+  /** EUMETSAT only: the map service layer, and the part of the flat map the satellite sees. */
+  layer?: string;
+  diskExtent?: Extent;
   views: View[];
 }
 
@@ -1565,6 +1577,385 @@ export const SATELLITES: Satellite[] = [
           [
             2400,
             2165,
+            0,
+            0
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "indian",
+    "code": "MSG-IODC",
+    "name": "Meteosat Indian Ocean",
+    "short": "Indian Ocean",
+    "craft": "Meteosat-9",
+    "lon": 45.5,
+    "source": "eumetsat",
+    "layer": "msg_iodc:rgb_naturalenhncd",
+    "diskExtent": {
+      "south": -77,
+      "west": -35.5,
+      "north": 77,
+      "east": 118.5
+    },
+    "views": [
+      {
+        "id": "earth",
+        "code": "FD",
+        "label": "Whole Earth",
+        "group": "whole",
+        "shape": "disk",
+        "cadence": 60,
+        "offset": 0,
+        "sizes": [
+          [
+            678,
+            678,
+            0,
+            0
+          ],
+          [
+            1200,
+            1200,
+            0,
+            0
+          ],
+          [
+            1808,
+            1808,
+            0,
+            0
+          ],
+          [
+            2700,
+            2700,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "india",
+        "code": "IN",
+        "label": "India and South Asia",
+        "group": "region",
+        "shape": "rect",
+        "cadence": 60,
+        "offset": 0,
+        "extent": {
+          "south": 5,
+          "west": 66,
+          "north": 36,
+          "east": 93
+        },
+        "sizes": [
+          [
+            600,
+            689,
+            0,
+            0
+          ],
+          [
+            1200,
+            1378,
+            0,
+            0
+          ],
+          [
+            1800,
+            2067,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "middle-east",
+        "code": "ME",
+        "label": "Middle East",
+        "group": "region",
+        "shape": "rect",
+        "cadence": 60,
+        "offset": 0,
+        "extent": {
+          "south": 12,
+          "west": 30,
+          "north": 42,
+          "east": 63
+        },
+        "sizes": [
+          [
+            600,
+            545,
+            0,
+            0
+          ],
+          [
+            1200,
+            1091,
+            0,
+            0
+          ],
+          [
+            1800,
+            1636,
+            0,
+            0
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "himawari",
+    "code": "HIMAWARI9",
+    "name": "Himawari",
+    "craft": "Himawari-9",
+    "lon": 140.7,
+    "source": "cira",
+    "views": [
+      {
+        "id": "earth",
+        "code": "FD",
+        "label": "Whole Earth",
+        "group": "whole",
+        "shape": "disk",
+        "cadence": 10,
+        "offset": 0,
+        "box": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "sizes": [
+          [
+            688,
+            688,
+            0,
+            0
+          ],
+          [
+            1376,
+            1376,
+            0,
+            0
+          ],
+          [
+            2752,
+            2752,
+            0,
+            0
+          ],
+          [
+            5504,
+            5504,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "japan",
+        "code": "JAPAN",
+        "label": "Japan and Korea",
+        "group": "region",
+        "shape": "rect",
+        "cadence": 10,
+        "offset": 0,
+        "box": [
+          0.3602,
+          0.109,
+          0.5452,
+          0.2218
+        ],
+        "sizes": [
+          [
+            509,
+            310,
+            0,
+            0
+          ],
+          [
+            1018,
+            621,
+            0,
+            0
+          ],
+          [
+            2036,
+            1242,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "east-asia",
+        "code": "EAST-ASIA",
+        "label": "East Asia",
+        "group": "region",
+        "shape": "rect",
+        "cadence": 10,
+        "offset": 0,
+        "box": [
+          0.1593,
+          0.0874,
+          0.588,
+          0.3318
+        ],
+        "sizes": [
+          [
+            590,
+            336,
+            0,
+            0
+          ],
+          [
+            1180,
+            673,
+            0,
+            0
+          ],
+          [
+            2360,
+            1345,
+            0,
+            0
+          ],
+          [
+            4719,
+            2690,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "southeast-asia",
+        "code": "SOUTHEAST-ASIA",
+        "label": "Southeast Asia",
+        "group": "region",
+        "shape": "rect",
+        "cadence": 10,
+        "offset": 0,
+        "box": [
+          0.1089,
+          0.2883,
+          0.4019,
+          0.6089
+        ],
+        "sizes": [
+          [
+            403,
+            441,
+            0,
+            0
+          ],
+          [
+            806,
+            882,
+            0,
+            0
+          ],
+          [
+            1613,
+            1765,
+            0,
+            0
+          ],
+          [
+            3225,
+            3529,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "australia",
+        "code": "AUSTRALIA",
+        "label": "Australia",
+        "group": "region",
+        "shape": "rect",
+        "cadence": 10,
+        "offset": 0,
+        "box": [
+          0.2165,
+          0.5872,
+          0.6495,
+          0.8852
+        ],
+        "sizes": [
+          [
+            596,
+            410,
+            0,
+            0
+          ],
+          [
+            1192,
+            820,
+            0,
+            0
+          ],
+          [
+            2383,
+            1640,
+            0,
+            0
+          ],
+          [
+            4766,
+            3280,
+            0,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "west-pacific",
+        "code": "WEST-PACIFIC",
+        "label": "Western Pacific",
+        "group": "region",
+        "shape": "rect",
+        "cadence": 10,
+        "offset": 0,
+        "box": [
+          0.2981,
+          0.1813,
+          0.7762,
+          0.5
+        ],
+        "sizes": [
+          [
+            329,
+            219,
+            0,
+            0
+          ],
+          [
+            658,
+            439,
+            0,
+            0
+          ],
+          [
+            1316,
+            877,
+            0,
+            0
+          ],
+          [
+            2631,
+            1754,
+            0,
+            0
+          ],
+          [
+            5263,
+            3508,
             0,
             0
           ]

@@ -1,7 +1,8 @@
-// Meteosat pictures from EUMETSAT's public map service (EUMETView). It serves Meteosat-12's
-// GeoColour picture as a flat latitude/longitude map; for the whole-Earth view the browser
-// turns that map back into the round planet as Meteosat sees it from 0° longitude. Regions
-// are shown as the flat map itself.
+// Meteosat pictures from EUMETSAT's public map service (EUMETView). It serves each satellite's
+// picture as a flat latitude/longitude map: Meteosat-12's GeoColour from 0° and Meteosat-9's
+// Natural Colour Enhanced from 45.5°E over the Indian Ocean. For the whole-Earth view the
+// browser turns that map back into the round planet as the satellite sees it. Regions are
+// shown as the flat map itself.
 //
 // Licence: EUMETSAT's data policy (Jan 2026) makes Meteosat image products, hourly scans and
 // anything an hour or older "Core" data: free and unrestricted under CC BY 4.0, with the
@@ -22,12 +23,12 @@ export interface Extent {
 }
 
 /** Address of a flat-map picture of `extent` at `width` × `height`, for the scan at `when`. */
-export function wmsUrl(extent: Extent, width: number, height: number, when: Date): string {
+export function wmsUrl(extent: Extent, width: number, height: number, when: Date, layer = LAYER): string {
   const p = new URLSearchParams({
     service: 'WMS',
     version: '1.3.0',
     request: 'GetMap',
-    layers: LAYER,
+    layers: layer,
     styles: '',
     crs: 'EPSG:4326',
     // WMS 1.3.0 with EPSG:4326 takes latitude first.
@@ -35,6 +36,8 @@ export function wmsUrl(extent: Extent, width: number, height: number, when: Date
     width: String(width),
     height: String(height),
     format: 'image/jpeg',
+    // Night is empty in the Natural Colour layers; without this the map server paints it white.
+    bgcolor: '0x000000',
     time: when.toISOString().replace('.000Z', 'Z'),
   });
   return `${WMS}?${p}`;
@@ -83,7 +86,7 @@ export interface Pixels {
 
 /** Turns a flat-map picture of DISK_EXTENT into the round planet, `size` pixels square.
  * Returns the RGBA pixels; space is black. Bilinear sampling. */
-export function reprojectDisk(src: Pixels, size: number, extent: Extent = DISK_EXTENT): Pixels {
+export function reprojectDisk(src: Pixels, size: number, extent: Extent = DISK_EXTENT, subLon = 0): Pixels {
   const out = { width: size, height: size, data: new Uint8ClampedArray(size * size * 4) };
   const o = out.data;
   const s = src.data;
@@ -98,7 +101,7 @@ export function reprojectDisk(src: Pixels, size: number, extent: Extent = DISK_E
       const k = (j * size + i) * 4;
       o[k + 3] = 255;
       const x = (i + 0.5 - size / 2) * scale;
-      const p = scanToLonLat(x, y);
+      const p = scanToLonLat(x, y, subLon);
       if (!p) continue;
       const u = ((p.lon - extent.west) / lonSpan) * sw - 0.5;
       const v = ((extent.north - p.lat) / latSpan) * sh - 0.5;
@@ -124,8 +127,8 @@ export function reprojectDisk(src: Pixels, size: number, extent: Extent = DISK_E
 }
 
 /** How big a flat map to ask for, to fill a `size`-pixel round picture without blur. */
-export function sourceSize(size: number): [number, number] {
+export function sourceSize(size: number, extent: Extent = DISK_EXTENT): [number, number] {
   const w = Math.round(size * 1.5);
-  const h = Math.round((w * (DISK_EXTENT.north - DISK_EXTENT.south)) / (DISK_EXTENT.east - DISK_EXTENT.west));
+  const h = Math.round((w * (extent.north - extent.south)) / (extent.east - extent.west));
   return [w, h];
 }
