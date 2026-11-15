@@ -338,7 +338,7 @@ export const SATELLITES: Satellite[] = [
       {
         "id": "ga",
         "code": "ga",
-        "label": "Gulf of America",
+        "label": "Gulf of Mexico",
         "group": "region",
         "shape": "rect",
         "cadence": 5,
