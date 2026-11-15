@@ -37,24 +37,6 @@
   letter-spacing: -0.02em;
 }
 
-/* "About" (and "Back to the lab" on the About page) on the right of the top bar. */
-.bar-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-  padding-inline: var(--space-2);
-  margin-inline-end: calc(-1 * var(--space-2));
-  border-radius: var(--radius-sm);
-  color: var(--ink-muted);
-  font-size: var(--step--1);
-  text-decoration: none;
-}
-
-.bar-link:hover {
-  color: var(--ink);
-  text-decoration: underline;
-}
-
 .prose p,
 .prose li {
   max-width: var(--measure);
