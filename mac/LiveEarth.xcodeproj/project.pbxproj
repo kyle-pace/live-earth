@@ -1,0 +1,423 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0C0723D57AE5B0B291D9974E /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835B2D043FF0414D98FF71FC /* Analytics.swift */; };
+		19F4F752893D37480A308F44 /* MenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0FA410724CDF6E7933D90CE /* MenuView.swift */; };
+		2D4F5CEA590E3501E51529B8 /* Desktop.swift in Sources */ = {isa = PBXBuildFile; fileRef = E72EF498686A4A1C346FFAC8 /* Desktop.swift */; };
+		3418A5ED8E8DEFB413BC93A8 /* AtkinsonHyperlegibleNext-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7DAE8E2326D6860441BB4DAA /* AtkinsonHyperlegibleNext-Regular.ttf */; };
+		63BA2EDEE97568CEFE393567 /* LiveEarth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28031AE63411A6ED86C5F3EF /* LiveEarth.swift */; };
+		67A7AB52C4A54C9FF0425A1B /* LiveEarthApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42887992B38F8E96EBB9DC3B /* LiveEarthApp.swift */; };
+		9555FF67B513D381DABA2078 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 37A884A2373CDC0A8D375E4F /* Assets.xcassets */; };
+		99182C22ABFBB420F2AF086E /* views.json in Resources */ = {isa = PBXBuildFile; fileRef = 4DB9E7CCAD81E92C7BD896C1 /* views.json */; };
+		9A6380FB6257C13ED22E54F2 /* AtkinsonHyperlegibleNext-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F57646689C3C8546489F6D16 /* AtkinsonHyperlegibleNext-SemiBold.ttf */; };
+		C64CD428058990E0F9617335 /* Pictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25E7676263D172AFE79F959B /* Pictures.swift */; };
+		CAB3E8C6522A43414BD94823 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = D7563550BDF7CDAC8F614911 /* OFL.txt */; };
+		E1CF9AB5C203846312F6466F /* Catalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD4E26DF0E58E743F83A76B7 /* Catalog.swift */; };
+		E29894CF5FA059025279E10E /* AtkinsonHyperlegibleNext-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6DD3C089221A34856D806155 /* AtkinsonHyperlegibleNext-Bold.ttf */; };
+		E3FB60C9B5F86A3E60BE208B /* AmplitudeSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 64158184EFDD3DC977A5E0DD /* AmplitudeSwift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		25E7676263D172AFE79F959B /* Pictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pictures.swift; sourceTree = "<group>"; };
+		28031AE63411A6ED86C5F3EF /* LiveEarth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveEarth.swift; sourceTree = "<group>"; };
+		37A884A2373CDC0A8D375E4F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		42887992B38F8E96EBB9DC3B /* LiveEarthApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveEarthApp.swift; sourceTree = "<group>"; };
+		4DB9E7CCAD81E92C7BD896C1 /* views.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = views.json; sourceTree = "<group>"; };
+		6DD3C089221A34856D806155 /* AtkinsonHyperlegibleNext-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "AtkinsonHyperlegibleNext-Bold.ttf"; sourceTree = "<group>"; };
+		7DAE8E2326D6860441BB4DAA /* AtkinsonHyperlegibleNext-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "AtkinsonHyperlegibleNext-Regular.ttf"; sourceTree = "<group>"; };
+		835B2D043FF0414D98FF71FC /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
+		A6D126D11DBEDDD3A4A039FA /* LiveEarth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LiveEarth.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D7563550BDF7CDAC8F614911 /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
+		DD4E26DF0E58E743F83A76B7 /* Catalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Catalog.swift; sourceTree = "<group>"; };
+		E72EF498686A4A1C346FFAC8 /* Desktop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Desktop.swift; sourceTree = "<group>"; };
+		F0FA410724CDF6E7933D90CE /* MenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuView.swift; sourceTree = "<group>"; };
+		F57646689C3C8546489F6D16 /* AtkinsonHyperlegibleNext-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "AtkinsonHyperlegibleNext-SemiBold.ttf"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4D8D6D82732A4F52B8FAF7A9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E3FB60C9B5F86A3E60BE208B /* AmplitudeSwift in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2943078D974041BFF4F6D695 = {
+			isa = PBXGroup;
+			children = (
+				8D534A8CDFCF4D319BEBDD79 /* LiveEarth */,
+				4156EBA55571DDE1FB07A385 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4156EBA55571DDE1FB07A385 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A6D126D11DBEDDD3A4A039FA /* LiveEarth.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6BCF54B1ED31078D82EE495E /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				6DD3C089221A34856D806155 /* AtkinsonHyperlegibleNext-Bold.ttf */,
+				7DAE8E2326D6860441BB4DAA /* AtkinsonHyperlegibleNext-Regular.ttf */,
+				F57646689C3C8546489F6D16 /* AtkinsonHyperlegibleNext-SemiBold.ttf */,
+				D7563550BDF7CDAC8F614911 /* OFL.txt */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		7BACB6245CC7EBEB118C86CA /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				835B2D043FF0414D98FF71FC /* Analytics.swift */,
+				DD4E26DF0E58E743F83A76B7 /* Catalog.swift */,
+				E72EF498686A4A1C346FFAC8 /* Desktop.swift */,
+				28031AE63411A6ED86C5F3EF /* LiveEarth.swift */,
+				42887992B38F8E96EBB9DC3B /* LiveEarthApp.swift */,
+				F0FA410724CDF6E7933D90CE /* MenuView.swift */,
+				25E7676263D172AFE79F959B /* Pictures.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		8D534A8CDFCF4D319BEBDD79 /* LiveEarth */ = {
+			isa = PBXGroup;
+			children = (
+				A0E3052559B94CF99B36F3AD /* Resources */,
+				7BACB6245CC7EBEB118C86CA /* Sources */,
+			);
+			path = LiveEarth;
+			sourceTree = "<group>";
+		};
+		A0E3052559B94CF99B36F3AD /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				37A884A2373CDC0A8D375E4F /* Assets.xcassets */,
+				4DB9E7CCAD81E92C7BD896C1 /* views.json */,
+				6BCF54B1ED31078D82EE495E /* Fonts */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B4C166BD2993070B1B63B522 /* LiveEarth */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D022CFC67674643CFEBD91C0 /* Build configuration list for PBXNativeTarget "LiveEarth" */;
+			buildPhases = (
+				F37EA20B57E0CCF3E16B14B3 /* Sources */,
+				87CBA58E951CB315A03C6FB7 /* Resources */,
+				4D8D6D82732A4F52B8FAF7A9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LiveEarth;
+			packageProductDependencies = (
+				64158184EFDD3DC977A5E0DD /* AmplitudeSwift */,
+			);
+			productName = LiveEarth;
+			productReference = A6D126D11DBEDDD3A4A039FA /* LiveEarth.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		11CB962A6499184F5A8E76B9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					B4C166BD2993070B1B63B522 = {
+						DevelopmentTeam = 9BF66MY8TQ;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 63411C55FAF9ADB22CAA1013 /* Build configuration list for PBXProject "LiveEarth" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 2943078D974041BFF4F6D695;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				5C3F42C1E68B63453D78C5EF /* XCRemoteSwiftPackageReference "Amplitude-Swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 4156EBA55571DDE1FB07A385 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B4C166BD2993070B1B63B522 /* LiveEarth */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		87CBA58E951CB315A03C6FB7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9555FF67B513D381DABA2078 /* Assets.xcassets in Resources */,
+				E29894CF5FA059025279E10E /* AtkinsonHyperlegibleNext-Bold.ttf in Resources */,
+				3418A5ED8E8DEFB413BC93A8 /* AtkinsonHyperlegibleNext-Regular.ttf in Resources */,
+				9A6380FB6257C13ED22E54F2 /* AtkinsonHyperlegibleNext-SemiBold.ttf in Resources */,
+				CAB3E8C6522A43414BD94823 /* OFL.txt in Resources */,
+				99182C22ABFBB420F2AF086E /* views.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F37EA20B57E0CCF3E16B14B3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0C0723D57AE5B0B291D9974E /* Analytics.swift in Sources */,
+				E1CF9AB5C203846312F6466F /* Catalog.swift in Sources */,
+				2D4F5CEA590E3501E51529B8 /* Desktop.swift in Sources */,
+				63BA2EDEE97568CEFE393567 /* LiveEarth.swift in Sources */,
+				67A7AB52C4A54C9FF0425A1B /* LiveEarthApp.swift in Sources */,
+				19F4F752893D37480A308F44 /* MenuView.swift in Sources */,
+				C64CD428058990E0F9617335 /* Pictures.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		5DF6B477D84E072139FA88B9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = LiveEarth/LiveEarth.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Live Earth";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.weather";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Kyle Pace";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "dev.kylepace.live-earth";
+				PRODUCT_NAME = "Live Earth";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		ABF5B69F5DAA096343202E69 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = LiveEarth/LiveEarth.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Live Earth";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.weather";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Kyle Pace";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "dev.kylepace.live-earth";
+				PRODUCT_NAME = "Live Earth";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		C704AF9A4519CE34972EFE43 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 9BF66MY8TQ;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		CB82668C18DCA7BC51BF2710 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 9BF66MY8TQ;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		63411C55FAF9ADB22CAA1013 /* Build configuration list for PBXProject "LiveEarth" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CB82668C18DCA7BC51BF2710 /* Debug */,
+				C704AF9A4519CE34972EFE43 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D022CFC67674643CFEBD91C0 /* Build configuration list for PBXNativeTarget "LiveEarth" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5DF6B477D84E072139FA88B9 /* Debug */,
+				ABF5B69F5DAA096343202E69 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		5C3F42C1E68B63453D78C5EF /* XCRemoteSwiftPackageReference "Amplitude-Swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/amplitude/Amplitude-Swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.19.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		64158184EFDD3DC977A5E0DD /* AmplitudeSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5C3F42C1E68B63453D78C5EF /* XCRemoteSwiftPackageReference "Amplitude-Swift" */;
+			productName = AmplitudeSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 11CB962A6499184F5A8E76B9 /* Project object */;
+}

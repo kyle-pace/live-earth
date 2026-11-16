@@ -19,3 +19,7 @@ npm-debug.log*
 
 # npm run check output (screenshots)
 .check/
+
+# Xcode
+xcuserdata/
+*.xcuserstate

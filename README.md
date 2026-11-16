@@ -4,6 +4,8 @@ The whole planet and your corner of it, as five weather satellites see it right 
 
 Live at [kylepace.dev/live-earth/](https://kylepace.dev/live-earth/), one of the labs on [kylepace.dev](https://kylepace.dev/labs/).
 
+There is also a Mac menu bar app in [`mac/`](mac/README.md) that keeps a live picture as your desktop picture.
+
 ## Working on it
 
 ```sh
